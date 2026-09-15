@@ -1,0 +1,4 @@
+pnpm format
+pnpm test
+pnpm lint
+pnpm check-types
