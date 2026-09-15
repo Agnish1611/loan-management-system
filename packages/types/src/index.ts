@@ -66,3 +66,41 @@ export interface HealthCheckResponse {
   timestamp: string;
   service: string;
 }
+
+export * from "./money.js";
+export * from "./bre.js";
+
+export const borrowerProfileUpsertSchema = z.object({
+  panNumber: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(
+      /^[A-Z]{5}[0-9]{4}[A-Z]$/,
+      "Invalid PAN format. Must be 5 uppercase letters, 4 digits, and 1 letter",
+    ),
+  dateOfBirth: z
+    .string()
+    .refine(
+      (val) => !isNaN(Date.parse(val)),
+      "Invalid date format for date of birth",
+    ),
+  monthlySalary: z.number().min(0, "Monthly salary must be a positive number"),
+  employmentMode: z.enum(EMPLOYMENT_MODES),
+});
+
+export type BorrowerProfileUpsertInput = z.infer<
+  typeof borrowerProfileUpsertSchema
+>;
+
+export interface BorrowerProfileDto {
+  id: string;
+  userId: string;
+  panNumber: string;
+  dateOfBirth: string;
+  monthlySalaryPaise: number;
+  employmentMode: EmploymentMode;
+  bre: import("./bre.js").BreVerdict;
+  createdAt: string;
+  updatedAt: string;
+}

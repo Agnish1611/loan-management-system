@@ -4,7 +4,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { connectDB, disconnectDB } from "@repo/database";
 import { createApp } from "@/app.js";
 import { apiV1Router } from "@/routes/index.js";
-import { UserModel } from "@/models/index.js";
+import { UserModel, BorrowerProfileModel } from "@/models/index.js";
 import { requireAuth, requireRole } from "@/middleware/index.js";
 import {
   seedService,
@@ -94,6 +94,43 @@ describe("Phase 2: Database Seeding & RBAC Matrix Integration Tests", () => {
         expect(user?.fullName).toBe(def.fullName);
         expect(user?.isActive).toBe(true);
       }
+    });
+
+    it("seeds demo borrower profiles with pre-evaluated BRE verdicts", async () => {
+      // 1. Borrower Rahul Sharma -> BRE passed
+      const rahul = await UserModel.findOne({
+        email: "borrower@creditsea.com",
+      });
+      const rahulProfile = await BorrowerProfileModel.findOne({
+        userId: rahul?._id,
+      });
+      expect(rahulProfile).toBeDefined();
+      expect(rahulProfile?.bre.passed).toBe(true);
+      expect(rahulProfile?.panNumber).toBe("ABCDE1234F");
+
+      // 2. Borrower Vikram Singh -> BRE failed
+      const vikram = await UserModel.findOne({
+        email: "borrower.brefail@creditsea.com",
+      });
+      const vikramProfile = await BorrowerProfileModel.findOne({
+        userId: vikram?._id,
+      });
+      expect(vikramProfile).toBeDefined();
+      expect(vikramProfile?.bre.passed).toBe(false);
+      expect(vikramProfile?.panNumber).toBe("XYZAB5678C");
+
+      // 3. Borrower Priya Patel -> Registered lead (no profile yet)
+      const priya = await UserModel.findOne({
+        email: "borrower.lead@creditsea.com",
+      });
+      const priyaProfile = await BorrowerProfileModel.findOne({
+        userId: priya?._id,
+      });
+      expect(priyaProfile).toBeNull();
+
+      // Total profiles in DB
+      const profileCount = await BorrowerProfileModel.countDocuments();
+      expect(profileCount).toBe(2);
     });
   });
 

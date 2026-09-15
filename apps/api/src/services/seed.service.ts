@@ -1,6 +1,16 @@
 import bcrypt from "bcryptjs";
-import { userRepository, type UserRepository } from "@/repositories/index.js";
-import type { Role } from "@repo/types";
+import {
+  userRepository,
+  type UserRepository,
+  borrowerProfileRepository,
+  type BorrowerProfileRepository,
+} from "@/repositories/index.js";
+import {
+  evaluateBre,
+  toPaise,
+  type Role,
+  type BorrowerProfileDto,
+} from "@repo/types";
 
 export interface SeedUserDefinition {
   email: string;
@@ -44,13 +54,13 @@ export const CANONICAL_SEED_USERS: SeedUserDefinition[] = [
     email: "borrower@creditsea.com",
     fullName: "Rahul Sharma",
     role: "BORROWER",
-    description: "Standard demo borrower account",
+    description: "Standard demo borrower account (BRE passed)",
   },
   {
     email: "borrower.lead@creditsea.com",
     fullName: "Priya Patel",
     role: "BORROWER",
-    description: "Registered lead borrower account",
+    description: "Registered lead borrower account (no profile yet)",
   },
   {
     email: "borrower.brefail@creditsea.com",
@@ -60,17 +70,43 @@ export const CANONICAL_SEED_USERS: SeedUserDefinition[] = [
   },
 ];
 
+export const DEMO_BORROWER_PROFILES = [
+  {
+    email: "borrower@creditsea.com",
+    panNumber: "ABCDE1234F",
+    dateOfBirth: "1995-05-15",
+    monthlySalary: 75000,
+    employmentMode: "SALARIED" as const,
+  },
+  {
+    email: "borrower.brefail@creditsea.com",
+    panNumber: "XYZAB5678C",
+    dateOfBirth: "2005-01-01",
+    monthlySalary: 15000,
+    employmentMode: "UNEMPLOYED" as const,
+  },
+];
+
 export const DEFAULT_SEED_PASSWORD = "Password123!";
 
 export class SeedService {
-  constructor(private userRepo: UserRepository = userRepository) {}
+  constructor(
+    private userRepo: UserRepository = userRepository,
+    private borrowerRepo: BorrowerProfileRepository = borrowerProfileRepository,
+  ) {}
 
   async seed(password = DEFAULT_SEED_PASSWORD): Promise<{
     seededCount: number;
     users: Array<{ id: string; email: string; fullName: string; role: Role }>;
+    profiles: Array<{
+      userId: string;
+      panNumber: string;
+      brePassed: boolean;
+    }>;
   }> {
     const passwordHash = await bcrypt.hash(password, 12);
     const seededUsers = [];
+    const userMap: Record<string, string> = {};
 
     for (const def of CANONICAL_SEED_USERS) {
       const doc = await this.userRepo.upsertByEmail(def.email, {
@@ -86,11 +122,41 @@ export class SeedService {
         fullName: doc.fullName,
         role: doc.role,
       });
+      userMap[doc.email] = doc._id.toString();
+    }
+
+    const seededProfiles = [];
+    for (const p of DEMO_BORROWER_PROFILES) {
+      const userId = userMap[p.email];
+      if (!userId) continue;
+
+      const dob = new Date(p.dateOfBirth);
+      const breVerdict = evaluateBre({
+        panNumber: p.panNumber,
+        dateOfBirth: dob,
+        monthlySalary: p.monthlySalary,
+        employmentMode: p.employmentMode,
+      });
+
+      const profileDoc = await this.borrowerRepo.upsertByUserId(userId, {
+        panNumber: p.panNumber,
+        dateOfBirth: dob,
+        monthlySalaryPaise: toPaise(p.monthlySalary),
+        employmentMode: p.employmentMode,
+        bre: breVerdict,
+      });
+
+      seededProfiles.push({
+        userId,
+        panNumber: profileDoc.panNumber,
+        brePassed: profileDoc.bre.passed,
+      });
     }
 
     return {
       seededCount: seededUsers.length,
       users: seededUsers,
+      profiles: seededProfiles,
     };
   }
 }

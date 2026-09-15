@@ -17,7 +17,7 @@ async function main(): Promise<void> {
 
   await connectDB(env.MONGO_URI);
 
-  const { seededCount, users } = await seedService.seed();
+  const { seededCount, users, profiles } = await seedService.seed();
 
   console.log(`\nSuccessfully seeded ${seededCount} accounts:`);
   console.table(
@@ -30,6 +30,15 @@ async function main(): Promise<void> {
         Description: def?.description ?? "",
       };
     }),
+  );
+
+  console.log(`\nSeeded ${profiles.length} demo borrower profiles:`);
+  console.table(
+    profiles.map((p) => ({
+      UserId: p.userId,
+      PAN: p.panNumber,
+      BREVerdict: p.brePassed ? "PASSED" : "REJECTED",
+    })),
   );
 
   console.log(
