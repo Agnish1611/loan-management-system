@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import request from 'supertest';
-import { createApp } from '../src/app.js';
+import request from "supertest";
+import { createApp } from "../src/app.js";
 
 describe("API Health Endpoints", () => {
   const app = createApp();

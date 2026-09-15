@@ -1,159 +1,158 @@
-# Turborepo starter
+# Loan Management System (LMS) — Full-Stack Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+A scalable, production-grade full-stack monorepo for the **CreditSea Loan Management System (LMS)** built with **Next.js 16**, **Node.js / Express**, **MongoDB / Mongoose**, **HeroUI**, and **pnpm workspaces + Turborepo**.
 
-## Using this example
+---
 
-Run the following command:
+## Architecture Overview
 
-```sh
-npx create-turbo@latest
+```
+.
+├── apps/
+│   ├── web/                  # Next.js 16 App Router — Borrower Portal (Port 3000)
+│   ├── admin/                # Next.js 16 App Router — Operations Dashboard (Port 3001)
+│   └── api/                  # Node.js + Express + TypeScript API (Port 8000)
+├── packages/
+│   ├── database/             # Shared MongoDB + Mongoose connection package (@repo/database)
+│   ├── ui/                   # Shared UI design system & HeroUI components (@repo/ui)
+│   ├── types/                # Shared domain types, enums, DTOs (@repo/types)
+│   ├── typescript-config/    # Shared tsconfig configurations (@repo/typescript-config)
+│   └── eslint-config/        # Shared ESLint configurations (@repo/eslint-config)
+├── .husky/                   # Git automation hooks (pre-commit, commit-msg)
+├── commitlint.config.mjs     # Conventional Commits rules
+├── vitest.config.mts         # Root workspace test runner configuration
+├── turbo.json                # Turborepo build pipeline
+└── pnpm-workspace.yaml       # pnpm workspace definition
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## Prerequisites
 
-### Apps and Packages
+Ensure you have the following installed on your machine:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- **Node.js**: `>= 24.0.0`
+- **pnpm**: `>= 11.0.0` (Corepack or standalone: `npm i -g pnpm`)
+- **MongoDB**: Local `mongod` instance or a MongoDB Atlas connection URI
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+---
 
-### Utilities
+## Quick Start / Setup Instructions
 
-This Turborepo has some additional tools already setup for you:
+### 1. Clone the Repository
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+git clone <repo-url>
+cd loan-management-system
 ```
 
-Without global `turbo`, use your package manager:
+### 2. Install Dependencies
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+```bash
+pnpm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+> Running `pnpm install` installs dependencies across all workspaces and automatically initializes **Husky** Git hooks via the `prepare` script.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### 3. Configure Environment Variables
 
-```sh
-turbo build --filter=docs
+Copy the example environment configuration into `apps/api/.env`:
+
+```bash
+cp apps/api/.env.example apps/api/.env
 ```
 
-Without global `turbo`:
+Review and adjust `apps/api/.env` if necessary:
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```env
+# Server
+PORT=8000
+NODE_ENV=development
+
+# Authentication
+JWT_SECRET=change-me-before-production
+
+# Database
+MONGO_URI=mongodb://localhost:27017/lms
+
+# File Storage ("local" | "s3")
+STORAGE_DRIVER=local
 ```
 
-### Develop
+### 4. Run Development Servers
 
-To develop all apps and packages, run the following command:
+Start all applications and services concurrently:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm dev
 ```
 
-Without global `turbo`, use your package manager:
+Once started, the following services will be available:
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+- **Borrower Portal (`web`)**: [http://localhost:3000](http://localhost:3000)
+- **Operations Dashboard (`admin`)**: [http://localhost:3001](http://localhost:3001)
+- **Backend API (`api`)**: [http://localhost:8000](http://localhost:8000)
+- **API Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+
+---
+
+## Running Specific Applications
+
+You can run, test, or build individual apps using pnpm `--filter`:
+
+```bash
+# Run only the Borrower Portal
+pnpm --filter web dev
+
+# Run only the Operations Dashboard
+pnpm --filter admin dev
+
+# Run only the Express API
+pnpm --filter api dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Available Monorepo Scripts
 
-```sh
-turbo dev --filter=web
+| Command            | Description                                                     |
+| :----------------- | :-------------------------------------------------------------- |
+| `pnpm dev`         | Starts all applications in watch/development mode via Turborepo |
+| `pnpm build`       | Compiles and builds all apps and packages                       |
+| `pnpm test`        | Runs the workspace test suite using Vitest                      |
+| `pnpm test:watch`  | Runs Vitest in interactive watch mode                           |
+| `pnpm lint`        | Runs ESLint across all apps and packages                        |
+| `pnpm check-types` | Type-checks all TypeScript projects without emitting output     |
+| `pnpm format`      | Formats all code files using Prettier                           |
+
+---
+
+## Quality Assurance & Git Automation
+
+This repository enforces strict code quality and consistency through automated hooks:
+
+### 1. Git Pre-Commit Hook (Husky)
+
+Before every commit, [.husky/pre-commit](.husky/pre-commit) automatically executes:
+
+1. `pnpm format`: Formats staged code with Prettier.
+2. `pnpm test`: Runs Vitest unit and integration tests.
+3. `pnpm lint`: Validates code against shared ESLint rules.
+4. `pnpm check-types`: Validates TypeScript types across all workspaces.
+
+If any check fails, the commit is safely blocked.
+
+### 2. Commit Message Conventions (Commitlint)
+
+Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) format enforced by [.husky/commit-msg](.husky/commit-msg):
+
+```text
+type: description
+
+Examples:
+  feat: add loan calculation slider
+  fix: correct PAN regex validation
+  chore: update dependencies
 ```
 
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+**Allowed types**: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `revert`.
