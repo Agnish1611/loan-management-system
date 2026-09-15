@@ -1,5 +1,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import cors from "cors";
+import { apiV1Router } from "@/routes/index.js";
+import { errorHandler } from "@/middleware/index.js";
 import type { HealthCheckResponse } from "@repo/types";
 
 export function createApp(): Express {
@@ -8,7 +10,7 @@ export function createApp(): Express {
   app.use(cors());
   app.use(express.json());
 
-  // Health check endpoints
+  // Health check
   const healthHandler = (_req: Request, res: Response<HealthCheckResponse>) => {
     res.status(200).json({
       status: "ok",
@@ -28,6 +30,12 @@ export function createApp(): Express {
       status: "running",
     });
   });
+
+  // Versioned API routes
+  app.use("/api/v1", apiV1Router);
+
+  // Central error handling
+  app.use(errorHandler);
 
   return app;
 }

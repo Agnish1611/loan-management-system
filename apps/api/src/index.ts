@@ -1,9 +1,34 @@
-import "dotenv/config";
-import { app } from "./app.js";
+import { app } from "@/app.js";
+import { env } from "@/config/index.js";
+import { connectDB, disconnectDB } from "@repo/database";
 
-const PORT = Number(process.env.PORT) || 8000;
+async function bootstrap() {
+  try {
+    await connectDB(env.MONGO_URI);
+    console.log("📦 Connected to MongoDB");
 
-app.listen(PORT, () => {
-  console.log(`🚀 LMS API server listening on http://localhost:${PORT}`);
-  console.log(`👉 Health check available at http://localhost:${PORT}/health`);
-});
+    const server = app.listen(env.PORT, () => {
+      console.log(
+        `🚀 LMS API listening on port ${env.PORT} in ${env.NODE_ENV} mode`,
+      );
+      console.log(`👉 Health check: http://localhost:${env.PORT}/health`);
+    });
+
+    const shutdown = async () => {
+      console.log("Shutting down server...");
+      server.close(async () => {
+        await disconnectDB();
+        console.log("Disconnected from MongoDB");
+        process.exit(0);
+      });
+    };
+
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+bootstrap();
