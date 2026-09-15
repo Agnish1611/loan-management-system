@@ -31,6 +31,29 @@ export class UserRepository {
     }).exec();
     return count > 0;
   }
+
+  async upsertByEmail(
+    email: string,
+    data: {
+      passwordHash: string;
+      fullName: string;
+      role: Role;
+      isActive?: boolean;
+    },
+  ): Promise<IUserDocument> {
+    return UserModel.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      {
+        $set: {
+          fullName: data.fullName,
+          role: data.role,
+          passwordHash: data.passwordHash,
+          isActive: data.isActive ?? true,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    ).exec();
+  }
 }
 
 export const userRepository = new UserRepository();

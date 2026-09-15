@@ -9,6 +9,7 @@
     "check-types": "turbo run check-types",
     "test": "vitest run",
     "test:watch": "vitest",
+    "seed": "pnpm --filter api seed",
     "prepare": "husky"
   },
   "devDependencies": {

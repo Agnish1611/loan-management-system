@@ -79,7 +79,17 @@ MONGO_URI=mongodb://localhost:27017/lms
 STORAGE_DRIVER=local
 ```
 
-### 4. Run Development Servers
+### 4. Seed Database with Initial Role Accounts
+
+Populate the database with pre-configured accounts for each system role:
+
+```bash
+pnpm seed
+```
+
+This script is **idempotent** and safe to run multiple times.
+
+### 5. Run Development Servers
 
 Start all applications and services concurrently:
 
@@ -93,6 +103,23 @@ Once started, the following services will be available:
 - **Operations Dashboard (`admin`)**: [http://localhost:3001](http://localhost:3001)
 - **Backend API (`api`)**: [http://localhost:8000](http://localhost:8000)
 - **API Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+
+---
+
+## Seeded Role Accounts & Credentials
+
+The seed script creates one account per role with default password **`Password123!`**:
+
+| Role           | Email                            | Name                 | Permitted Module / Capabilities                   |
+| :------------- | :------------------------------- | :------------------- | :------------------------------------------------ |
+| `ADMIN`        | `admin@creditsea.com`            | System Administrator | Unrestricted access across all operations modules |
+| `SALES`        | `sales@creditsea.com`            | Sales Executive      | Lead tracking & pre-application stage             |
+| `SANCTION`     | `sanction@creditsea.com`         | Sanction Officer     | Loan application review, approval & rejection     |
+| `DISBURSEMENT` | `disbursement@creditsea.com`     | Disbursement Manager | Approved loan verification & fund release         |
+| `COLLECTION`   | `collection@creditsea.com`       | Collection Officer   | Payment recording & UTR reconciliation            |
+| `BORROWER`     | `borrower@creditsea.com`         | Rahul Sharma         | Multi-step loan application portal                |
+| `BORROWER`     | `borrower.lead@creditsea.com`    | Priya Patel          | Pre-application lead demo account                 |
+| `BORROWER`     | `borrower.brefail@creditsea.com` | Vikram Singh         | BRE failure demonstration account                 |
 
 ---
 
@@ -119,6 +146,7 @@ pnpm --filter api dev
 | :----------------- | :-------------------------------------------------------------- |
 | `pnpm dev`         | Starts all applications in watch/development mode via Turborepo |
 | `pnpm build`       | Compiles and builds all apps and packages                       |
+| `pnpm seed`        | Seeds the database with default accounts for all six roles      |
 | `pnpm test`        | Runs the workspace test suite using Vitest                      |
 | `pnpm test:watch`  | Runs Vitest in interactive watch mode                           |
 | `pnpm lint`        | Runs ESLint across all apps and packages                        |
