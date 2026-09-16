@@ -1,4 +1,9 @@
-import { LoanModel, type ILoan, type ILoanDocument } from "@/models/index.js";
+import {
+  LoanModel,
+  type ILoan,
+  type ILoanDocument,
+  type IStatusHistoryItem,
+} from "@/models/index.js";
 import type { LoanStatus } from "@repo/types";
 
 export class LoanRepository {
@@ -43,6 +48,31 @@ export class LoanRepository {
 
   async findByStatus(status: LoanStatus): Promise<ILoanDocument[]> {
     return LoanModel.find({ status }).sort({ createdAt: -1 }).exec();
+  }
+
+  async findQueueByStatus(status: LoanStatus): Promise<ILoanDocument[]> {
+    return LoanModel.find({ status })
+      .populate("borrowerUserId", "fullName email")
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async updateStatus(
+    id: string,
+    currentStatus: LoanStatus,
+    newStatus: LoanStatus,
+    historyItem: IStatusHistoryItem,
+  ): Promise<ILoanDocument | null> {
+    return LoanModel.findOneAndUpdate(
+      { _id: id, status: currentStatus },
+      {
+        $set: { status: newStatus },
+        $push: { statusHistory: historyItem },
+      },
+      { new: true },
+    )
+      .populate("borrowerUserId", "fullName email")
+      .exec();
   }
 
   async existsByReference(loanReference: string): Promise<boolean> {

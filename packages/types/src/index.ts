@@ -194,3 +194,5 @@ export interface LoanDto {
   createdAt: string;
   updatedAt: string;
 }
+
+export * from "./workflow.js";
