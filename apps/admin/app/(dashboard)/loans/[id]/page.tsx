@@ -673,8 +673,7 @@ export default function LoanDetailPage({
                   Disburse Funds
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Confirm the payout reference to release funds to the
-                  borrower.
+                  Confirm the payout reference to release funds to the borrower.
                 </p>
               </div>
 

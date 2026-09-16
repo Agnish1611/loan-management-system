@@ -1,34 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Sidebar, PageSpinner, ApiError } from "@repo/ui";
 import type { SidebarLinkItem } from "@repo/ui";
 import { authApi } from "@/lib/api/auth";
 import type { SanitizedUser } from "@repo/types";
 
+const ALL_LINKS: SidebarLinkItem[] = [
+  { href: "/dashboard", label: "Overview" },
+  { href: "/loans", label: "All Loans" },
+  { href: "/sales", label: "Sales Leads" },
+  { href: "/sanction", label: "Sanction Queue" },
+  { href: "/disbursement", label: "Disbursement Queue" },
+  { href: "/collection", label: "Collection" },
+];
+
+/** Base paths each role may access (prefix-matched, so /sales/[id] etc. are covered). */
+const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
+  SALES: ["/dashboard", "/loans", "/sales"],
+  SANCTION: ["/dashboard", "/loans", "/sanction"],
+  DISBURSEMENT: ["/dashboard", "/loans", "/disbursement"],
+  COLLECTION: ["/dashboard", "/loans", "/collection"],
+};
+
+function allowedPathsForRole(role: string): string[] {
+  if (role === "ADMIN") return ALL_LINKS.map((l) => l.href);
+  return ROLE_ALLOWED_PATHS[role] ?? ["/dashboard", "/loans"];
+}
+
 /** Build sidebar links based on user role. ADMIN sees all modules. */
 function buildLinks(role: string): SidebarLinkItem[] {
-  const all: SidebarLinkItem[] = [
-    { href: "/dashboard", label: "Overview" },
-    { href: "/loans", label: "All Loans" },
-    { href: "/sales", label: "Sales Leads" },
-    { href: "/sanction", label: "Sanction Queue" },
-    { href: "/disbursement", label: "Disbursement Queue" },
-    { href: "/collection", label: "Collection" },
-  ];
-
-  if (role === "ADMIN") return all;
-
-  const roleMap: Record<string, string[]> = {
-    SALES: ["/dashboard", "/loans", "/sales"],
-    SANCTION: ["/dashboard", "/loans", "/sanction"],
-    DISBURSEMENT: ["/dashboard", "/loans", "/disbursement"],
-    COLLECTION: ["/dashboard", "/loans", "/collection"],
-  };
-
-  const allowed = roleMap[role] ?? ["/dashboard", "/loans"];
-  return all.filter((l) => allowed.includes(l.href));
+  const allowed = allowedPathsForRole(role);
+  return ALL_LINKS.filter((l) => allowed.includes(l.href));
 }
 
 export default function DashboardLayout({
@@ -37,6 +41,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<SanitizedUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,8 +65,29 @@ export default function DashboardLayout({
       });
   }, [router]);
 
+  // Route-level RBAC: a role typing a module URL it doesn't own directly
+  // (not just clicking a hidden sidebar link) gets redirected rather than
+  // silently rendering a page whose data fetch will 403 — hiding the menu
+  // item alone isn't real access control on the frontend.
+  useEffect(() => {
+    if (!user) return;
+    const allowed = allowedPathsForRole(user.role);
+    const isAllowed = allowed.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`),
+    );
+    if (!isAllowed) {
+      router.replace("/dashboard");
+    }
+  }, [user, pathname, router]);
+
   if (loading) return <PageSpinner />;
   if (!user) return null;
+
+  const allowedPaths = allowedPathsForRole(user.role);
+  const isCurrentPathAllowed = allowedPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+  if (!isCurrentPathAllowed) return <PageSpinner />;
 
   async function handleLogout() {
     try {
