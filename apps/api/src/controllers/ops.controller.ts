@@ -4,13 +4,16 @@ import {
   type LoanWorkflowService,
   paymentService,
   type PaymentService,
+  salesService,
+  type SalesService,
 } from "@/services/index.js";
-import type { LoanStatus } from "@repo/types";
+import type { LoanStatus, SalesLeadQueryInput } from "@repo/types";
 
 export class OpsController {
   constructor(
     private service: LoanWorkflowService = loanWorkflowService,
     private payments: PaymentService = paymentService,
+    private sales: SalesService = salesService,
   ) {}
 
   getSanctionLoans = async (
@@ -146,6 +149,24 @@ export class OpsController {
 
       res.status(200).json({
         payments,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getSalesLeads = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const query = req.query as unknown as SalesLeadQueryInput;
+      const leads = await this.sales.getLeads(query);
+
+      res.status(200).json({
+        leads,
+        count: leads.length,
       });
     } catch (err) {
       next(err);

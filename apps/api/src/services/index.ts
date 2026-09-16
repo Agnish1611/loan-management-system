@@ -6,3 +6,4 @@ export * from "@/services/storage/index.js";
 export * from "@/services/loan.service.js";
 export * from "@/services/loan-workflow.service.js";
 export * from "@/services/payment.service.js";
+export * from "@/services/sales.service.js";

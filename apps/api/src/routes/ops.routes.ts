@@ -1,10 +1,16 @@
 import { Router } from "express";
 import { opsController } from "@/controllers/index.js";
-import { requireAuth, requireRole, validateBody } from "@/middleware/index.js";
+import {
+  requireAuth,
+  requireRole,
+  validateBody,
+  validateQuery,
+} from "@/middleware/index.js";
 import {
   loanSanctionSchema,
   loanDisburseSchema,
   paymentRecordSchema,
+  salesLeadQuerySchema,
 } from "@repo/types";
 import { ValidationError } from "@/errors/index.js";
 import type { Request, Response, NextFunction } from "express";
@@ -94,4 +100,13 @@ opsRouter.get(
   requireAuth,
   requireRole("COLLECTION"),
   opsController.getLoanPayments,
+);
+
+// Sales module routes
+opsRouter.get(
+  "/sales/leads",
+  requireAuth,
+  requireRole("SALES"),
+  validateQuery(salesLeadQuerySchema),
+  opsController.getSalesLeads,
 );
