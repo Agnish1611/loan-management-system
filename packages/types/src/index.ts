@@ -127,3 +127,70 @@ export interface BorrowerProfileDto {
   createdAt: string;
   updatedAt: string;
 }
+
+export * from "./loanMath.js";
+
+export const loanQuoteSchema = z.object({
+  principalRupees: z.coerce
+    .number()
+    .min(50000, "Principal must be at least ₹50,000")
+    .max(500000, "Principal cannot exceed ₹500,000"),
+  tenureDays: z.coerce
+    .number()
+    .int("Tenure must be an integer number of days")
+    .min(30, "Tenure must be at least 30 days")
+    .max(365, "Tenure cannot exceed 365 days"),
+});
+
+export type LoanQuoteInput = z.infer<typeof loanQuoteSchema>;
+
+export const loanApplySchema = z.object({
+  principalRupees: z
+    .number()
+    .min(50000, "Principal must be at least ₹50,000")
+    .max(500000, "Principal cannot exceed ₹500,000"),
+  tenureDays: z
+    .number()
+    .int("Tenure must be an integer number of days")
+    .min(30, "Tenure must be at least 30 days")
+    .max(365, "Tenure cannot exceed 365 days"),
+  salarySlipDocumentId: z
+    .string()
+    .trim()
+    .min(1, "Salary slip document ID is required"),
+});
+
+export type LoanApplyInput = z.infer<typeof loanApplySchema>;
+
+export interface LoanStatusHistoryItem {
+  from: LoanStatus | null;
+  to: LoanStatus;
+  byUserId: string | null;
+  reason: string | null;
+  at: string;
+}
+
+export interface ApplicantSnapshot {
+  monthlySalaryPaise: number;
+  employmentMode: EmploymentMode;
+  ageAtApplication: number;
+}
+
+export interface LoanDto {
+  id: string;
+  loanReference: string;
+  borrowerUserId: string;
+  salarySlipDocumentId: string;
+  principalPaise: number;
+  tenureDays: number;
+  annualInterestRateBps: number;
+  interestPaise: number;
+  totalRepaymentPaise: number;
+  amountPaidPaise: number;
+  outstandingPaise: number;
+  status: LoanStatus;
+  statusHistory: LoanStatusHistoryItem[];
+  applicantSnapshot: ApplicantSnapshot;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -4,7 +4,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { connectDB, disconnectDB } from "@repo/database";
 import { createApp } from "@/app.js";
 import { apiV1Router } from "@/routes/index.js";
-import { UserModel, BorrowerProfileModel } from "@/models/index.js";
+import { UserModel, BorrowerProfileModel, LoanModel } from "@/models/index.js";
 import { requireAuth, requireRole } from "@/middleware/index.js";
 import {
   seedService,
@@ -128,9 +128,32 @@ describe("Phase 2: Database Seeding & RBAC Matrix Integration Tests", () => {
       });
       expect(priyaProfile).toBeNull();
 
-      // Total profiles in DB
+      // Total profiles in DB (Rahul, Ananya, Karan, Vikram)
       const profileCount = await BorrowerProfileModel.countDocuments();
-      expect(profileCount).toBe(2);
+      expect(profileCount).toBe(4);
+
+      // Seeded demo loans
+      const loanCount = await LoanModel.countDocuments();
+      expect(loanCount).toBe(3);
+
+      const appliedLoan = await LoanModel.findOne({
+        loanReference: "LN-2026-APPLIED1",
+      });
+      expect(appliedLoan).toBeDefined();
+      expect(appliedLoan?.status).toBe("APPLIED");
+      expect(appliedLoan?.principalPaise).toBe(10000000); // ₹100,000 in paise
+
+      const sanctionedLoan = await LoanModel.findOne({
+        loanReference: "LN-2026-SANCTION1",
+      });
+      expect(sanctionedLoan).toBeDefined();
+      expect(sanctionedLoan?.status).toBe("SANCTIONED");
+
+      const disbursedLoan = await LoanModel.findOne({
+        loanReference: "LN-2026-DISBURSE1",
+      });
+      expect(disbursedLoan).toBeDefined();
+      expect(disbursedLoan?.status).toBe("DISBURSED");
     });
   });
 
