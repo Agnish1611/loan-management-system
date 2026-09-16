@@ -57,6 +57,7 @@ export {
   configureApiClient,
   getApiBase,
 } from "./lib/api";
+export { setSessionHint, clearSessionHint } from "./lib/session-hint";
 export { cn } from "./lib/utils";
 
 export {

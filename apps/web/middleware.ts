@@ -3,12 +3,20 @@ import { NextResponse, type NextRequest } from "next/server";
 /**
  * Middleware — Route protection for the borrower portal.
  *
- * With httpOnly cookies, the server sets "lms_token" as a secure cookie.
- * We check for its presence here (not its validity — that's the API's job).
- * Any expired/invalid cookie will cause the first API call to return 401,
- * which the app handles by redirecting to /login.
+ * Checks for `has_session`, a lightweight non-authoritative flag cookie
+ * set on this app's own domain by the client right after a successful
+ * login/register (see @repo/ui's setSessionHint). It is NOT the real
+ * session — that's the httpOnly `token`/`lms_token` cookie the API sets
+ * on its own domain, which this middleware can never see when the API
+ * lives on a different domain than this app (e.g. Render vs. Vercel);
+ * the browser simply never attaches a cookie across domains that way.
+ *
+ * This is presence-only, same as it always was: a fast server-side
+ * redirect hint, not a validity check. Any expired/invalid/missing real
+ * session still gets caught by the first API call each protected layout
+ * makes (authApi.me()), which redirects to /login on a 401 regardless
+ * of what this middleware decided.
  */
-
 const PUBLIC_PATHS = ["/login", "/register"];
 
 export function middleware(request: NextRequest) {
@@ -18,18 +26,15 @@ export function middleware(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(p + "/"),
   );
 
-  const hasAuthCookie =
-    request.cookies.has("lms_token") ||
-    request.cookies.has("token") ||
-    request.cookies.has("connect.sid");
+  const hasSessionHint = request.cookies.has("has_session");
 
   // Authenticated user hitting auth pages → send to dashboard
-  if (isPublic && hasAuthCookie) {
+  if (isPublic && hasSessionHint) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Unauthenticated user hitting protected pages → send to login
-  if (!isPublic && !hasAuthCookie) {
+  if (!isPublic && !hasSessionHint) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
