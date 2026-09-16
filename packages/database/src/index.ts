@@ -6,8 +6,17 @@ export async function connectDB(uri?: string): Promise<typeof mongoose> {
   const mongoUri =
     uri || process.env.MONGO_URI || "mongodb://localhost:27017/lms";
 
-  if (isConnected && mongoose.connection.readyState === 1) {
-    return mongoose;
+  if (mongoose.connection.readyState === 1) {
+    if (
+      uri &&
+      mongoose.connection.host &&
+      !mongoUri.includes(mongoose.connection.host)
+    ) {
+      await mongoose.disconnect();
+    } else {
+      isConnected = true;
+      return mongoose;
+    }
   }
 
   try {
@@ -21,8 +30,9 @@ export async function connectDB(uri?: string): Promise<typeof mongoose> {
 }
 
 export async function disconnectDB(): Promise<void> {
-  if (!isConnected) return;
-  await mongoose.disconnect();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
   isConnected = false;
 }
 

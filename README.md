@@ -1,60 +1,45 @@
-# Loan Management System (LMS) — Full-Stack Monorepo
+# CreditSea Loan Management System (LMS)
 
-A scalable, production-grade full-stack monorepo for the **CreditSea Loan Management System (LMS)** built with **Next.js 16**, **Node.js / Express**, **MongoDB / Mongoose**, **HeroUI**, and **pnpm workspaces + Turborepo**.
+A production-grade, full-stack monorepo for an end-to-end Loan Management System built with **Next.js 16**, **Express 5**, **TypeScript**, **MongoDB / Mongoose**, and **pnpm workspaces + Turborepo**.
 
 ---
 
-## Architecture Overview
+## Workspace Structure
 
-```
-.
+```text
 ├── apps/
-│   ├── web/                  # Next.js 16 App Router — Borrower Portal (Port 3000)
-│   ├── admin/                # Next.js 16 App Router — Operations Dashboard (Port 3001)
-│   └── api/                  # Node.js + Express + TypeScript API (Port 8000)
-├── packages/
-│   ├── database/             # Shared MongoDB + Mongoose connection package (@repo/database)
-│   ├── ui/                   # Shared UI design system & HeroUI components (@repo/ui)
-│   ├── types/                # Shared domain types, enums, DTOs (@repo/types)
-│   ├── typescript-config/    # Shared tsconfig configurations (@repo/typescript-config)
-│   └── eslint-config/        # Shared ESLint configurations (@repo/eslint-config)
-├── .husky/                   # Git automation hooks (pre-commit, commit-msg)
-├── commitlint.config.mjs     # Conventional Commits rules
-├── vitest.config.mts         # Root workspace test runner configuration
-├── turbo.json                # Turborepo build pipeline
-└── pnpm-workspace.yaml       # pnpm workspace definition
+│   ├── web/                  # Next.js 16 — Borrower Application Portal (Port 3000)
+│   ├── admin/                # Next.js 16 — Operations Dashboard (Port 3001)
+│   └── api/                  # Express 5 + TypeScript REST API (Port 8000)
+└── packages/
+    ├── types/                # Shared domain models, enums, loan math, Zod schemas (@repo/types)
+    ├── database/             # Shared MongoDB connection & Mongoose schemas (@repo/database)
+    ├── ui/                   # Shared React component library (@repo/ui)
+    ├── typescript-config/    # Shared tsconfig bases (@repo/typescript-config)
+    └── eslint-config/        # Shared ESLint rules (@repo/eslint-config)
 ```
 
 ---
 
 ## Prerequisites
 
-Ensure you have the following installed on your machine:
-
 - **Node.js**: `>= 24.0.0`
-- **pnpm**: `>= 11.0.0` (Corepack or standalone: `npm i -g pnpm`)
-- **MongoDB**: Local `mongod` instance or a MongoDB Atlas connection URI
+- **pnpm**: `>= 11.0.0` (`npm i -g pnpm`)
+- **MongoDB**: Local MongoDB instance (`mongodb://localhost:27017`) or MongoDB Atlas URI
 
 ---
 
 ## Quick Start / Setup Instructions
 
-### 1. Clone the Repository
-
-```bash
-git clone <repo-url>
-cd loan-management-system
-```
-
-### 2. Install Dependencies
+### 1. Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-> Running `pnpm install` installs dependencies across all workspaces and automatically initializes **Husky** Git hooks via the `prepare` script.
+> Automatically initializes Husky pre-commit hooks via the `prepare` script.
 
-### 3. Configure Environment Variables
+### 2. Configure Environment
 
 Copy the example environment configuration into `apps/api/.env`:
 
@@ -62,125 +47,106 @@ Copy the example environment configuration into `apps/api/.env`:
 cp apps/api/.env.example apps/api/.env
 ```
 
-Review and adjust `apps/api/.env` if necessary:
+#### Base Configuration
 
 ```env
-# Server
 PORT=8000
 NODE_ENV=development
-
-# Authentication
-JWT_SECRET=change-me-before-production
-
-# Database
+JWT_SECRET=your-super-secure-jwt-secret-min-32-chars
 MONGO_URI=mongodb://localhost:27017/lms
-
-# File Storage ("local" | "s3")
-STORAGE_DRIVER=local
 ```
 
-### 4. Seed Database with Initial Role Accounts
+#### File Storage Configuration (Local vs. AWS S3)
 
-Populate the database with pre-configured accounts for each system role:
+The API supports pluggable storage drivers via `STORAGE_DRIVER`:
+
+- **Option A: Local Filesystem (Default — Zero Setup)**  
+  Files are stored locally under `apps/api/uploads/`. Ideal for local development and testing without cloud accounts:
+
+  ```env
+  STORAGE_DRIVER=local
+  ```
+
+- **Option B: AWS S3 Storage (Cloud Production / Demo)**  
+  Stores documents in a private S3 bucket and serves downloads via short-lived (5-minute) presigned URLs:
+
+  ```env
+  STORAGE_DRIVER=s3
+  AWS_REGION=ap-south-1
+  S3_BUCKET=your-bucket-name
+  AWS_ACCESS_KEY_ID=your-aws-access-key-id
+  AWS_SECRET_ACCESS_KEY=your-aws-secret-access-key
+  # S3_ENDPOINT=http://localhost:4566 # Optional: uncomment for MinIO or LocalStack
+  ```
+
+  > **S3 Security & Permissions**:
+  >
+  > 1. Keep the S3 bucket **private** with _Block all public access_ turned **ON** (no public bucket policy).
+  > 2. Attach an IAM policy granting `s3:PutObject`, `s3:GetObject`, and `s3:DeleteObject` on `arn:aws:s3:::<your-bucket-name>/salary-slips/*`.
+  > 3. Downloads never expose permanent public URLs; files are accessed via temporary signed URLs minted on demand after server-side authorization.
+
+### 3. Seed Initial Accounts & Data
+
+Populate canonical user accounts for all roles and demo borrower records:
 
 ```bash
 pnpm seed
 ```
 
-This script is **idempotent** and safe to run multiple times.
+> The seed runner is **idempotent** and safe to execute multiple times.
 
-### 5. Run Development Servers
+### 4. Start Development Servers
 
-Start all applications and services concurrently:
+Run all workspace applications concurrently:
 
 ```bash
 pnpm dev
 ```
 
-Once started, the following services will be available:
+Available endpoints:
 
-- **Borrower Portal (`web`)**: [http://localhost:3000](http://localhost:3000)
-- **Operations Dashboard (`admin`)**: [http://localhost:3001](http://localhost:3001)
-- **Backend API (`api`)**: [http://localhost:8000](http://localhost:8000)
+- **Borrower Portal**: [http://localhost:3000](http://localhost:3000)
+- **Operations Dashboard**: [http://localhost:3001](http://localhost:3001)
+- **REST API**: [http://localhost:8000](http://localhost:8000)
 - **API Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
 
 ---
 
-## Seeded Role Accounts & Credentials
+## Default Seed Credentials
 
-The seed script creates one account per role with default password **`Password123!`**:
+All seeded accounts share the default password: **`Password123!`**
 
-| Role           | Email                            | Name                 | Permitted Module / Capabilities                   |
-| :------------- | :------------------------------- | :------------------- | :------------------------------------------------ |
-| `ADMIN`        | `admin@creditsea.com`            | System Administrator | Unrestricted access across all operations modules |
-| `SALES`        | `sales@creditsea.com`            | Sales Executive      | Lead tracking & pre-application stage             |
-| `SANCTION`     | `sanction@creditsea.com`         | Sanction Officer     | Loan application review, approval & rejection     |
-| `DISBURSEMENT` | `disbursement@creditsea.com`     | Disbursement Manager | Approved loan verification & fund release         |
-| `COLLECTION`   | `collection@creditsea.com`       | Collection Officer   | Payment recording & UTR reconciliation            |
-| `BORROWER`     | `borrower@creditsea.com`         | Rahul Sharma         | Multi-step loan application portal                |
-| `BORROWER`     | `borrower.lead@creditsea.com`    | Priya Patel          | Pre-application lead demo account                 |
-| `BORROWER`     | `borrower.brefail@creditsea.com` | Vikram Singh         | BRE failure demonstration account                 |
-
----
-
-## Running Specific Applications
-
-You can run, test, or build individual apps using pnpm `--filter`:
-
-```bash
-# Run only the Borrower Portal
-pnpm --filter web dev
-
-# Run only the Operations Dashboard
-pnpm --filter admin dev
-
-# Run only the Express API
-pnpm --filter api dev
-```
+| Role           | Email                            | Name                 | Accessible Modules                             |
+| :------------- | :------------------------------- | :------------------- | :--------------------------------------------- |
+| `ADMIN`        | `admin@creditsea.com`            | System Administrator | Unrestricted access across all dashboards      |
+| `SALES`        | `sales@creditsea.com`            | Ananya Sales         | Sales leads pipeline & pre-application triage  |
+| `SANCTION`     | `sanction@creditsea.com`         | Rahul Sanction       | Loan application review, approval & rejection  |
+| `DISBURSEMENT` | `disbursement@creditsea.com`     | Priya Disbursement   | Sanctioned loan verification & fund release    |
+| `COLLECTION`   | `collection@creditsea.com`       | Amit Collection      | Repayment recording, UTR entry & auto-closure  |
+| `BORROWER`     | `borrower@creditsea.com`         | Rahul Sharma         | Multi-step loan application & repayment status |
+| `BORROWER`     | `borrower.lead@creditsea.com`    | Priya Patel          | Pre-application lead demo (`REGISTERED_ONLY`)  |
+| `BORROWER`     | `borrower.brefail@creditsea.com` | Vikram Singh         | Pre-application lead demo (`BRE_REJECTED`)     |
 
 ---
 
-## Available Monorepo Scripts
+## Common Scripts
 
-| Command            | Description                                                     |
-| :----------------- | :-------------------------------------------------------------- |
-| `pnpm dev`         | Starts all applications in watch/development mode via Turborepo |
-| `pnpm build`       | Compiles and builds all apps and packages                       |
-| `pnpm seed`        | Seeds the database with default accounts for all six roles      |
-| `pnpm test`        | Runs the workspace test suite using Vitest                      |
-| `pnpm test:watch`  | Runs Vitest in interactive watch mode                           |
-| `pnpm lint`        | Runs ESLint across all apps and packages                        |
-| `pnpm check-types` | Type-checks all TypeScript projects without emitting output     |
-| `pnpm format`      | Formats all code files using Prettier                           |
+| Command            | Action                                              |
+| :----------------- | :-------------------------------------------------- |
+| `pnpm dev`         | Starts all apps concurrently in development mode    |
+| `pnpm seed`        | Populates default role accounts and demo loans      |
+| `pnpm test`        | Runs the test suite across all packages (181 tests) |
+| `pnpm lint`        | Runs ESLint across all workspaces                   |
+| `pnpm check-types` | Type-checks all packages without emitting output    |
+| `pnpm build`       | Builds production bundles for all apps and packages |
+| `pnpm format`      | Formats the entire codebase using Prettier          |
 
 ---
 
-## Quality Assurance & Git Automation
+## Key Architecture Highlights
 
-This repository enforces strict code quality and consistency through automated hooks:
-
-### 1. Git Pre-Commit Hook (Husky)
-
-Before every commit, [.husky/pre-commit](.husky/pre-commit) automatically executes:
-
-1. `pnpm format`: Formats staged code with Prettier.
-2. `pnpm test`: Runs Vitest unit and integration tests.
-3. `pnpm lint`: Validates code against shared ESLint rules.
-4. `pnpm check-types`: Validates TypeScript types across all workspaces.
-
-If any check fails, the commit is safely blocked.
-
-### 2. Commit Message Conventions (Commitlint)
-
-Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) format enforced by [.husky/commit-msg](.husky/commit-msg):
-
-```text
-type: description
-
-Examples:
-  feat: add loan calculation slider
-  fix: correct PAN regex validation
-  chore: update dependencies
-```
-
-**Allowed types**: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `revert`.
+- **Financial Exactness**: All financial amounts are represented in integer paise ($\text{₹}1 = 100\text{ paise}$) with zero floating-point accumulation drift.
+- **Server-Authoritative BRE**: Pure-function rule engine enforcing PAN format, Age (23–50 inclusive), Salary ($\ge \text{₹}25,000$), and Employment criteria.
+- **Declarative State Machine**: Guarded transitions (`APPLIED` $\rightarrow$ `SANCTIONED` / `REJECTED` $\rightarrow$ `DISBURSED` $\rightarrow$ `CLOSED`) with immutable `statusHistory` audit records.
+- **Atomic Repayment Ledger**: Append-only payment records, global unique UTR enforcement, and system auto-close upon reaching zero outstanding balance.
+- **Dynamic Sales Leads**: High-performance MongoDB aggregation pipeline deriving leads on-the-fly from users without loans, eliminating dual-write sync issues.
