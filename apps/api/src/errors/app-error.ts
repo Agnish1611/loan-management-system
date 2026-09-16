@@ -45,3 +45,15 @@ export class ValidationError extends AppError {
     super(message, 422);
   }
 }
+
+export class PayloadTooLargeError extends AppError {
+  constructor(message = "Payload too large") {
+    super(message, 413);
+  }
+}
+
+export class UnsupportedMediaTypeError extends AppError {
+  constructor(message = "Unsupported media type") {
+    super(message, 415);
+  }
+}

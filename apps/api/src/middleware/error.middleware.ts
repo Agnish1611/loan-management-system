@@ -22,6 +22,23 @@ export function errorHandler(
   }
 
   if (
+    err.name === "MulterError" ||
+    (err as { code?: string }).code === "LIMIT_FILE_SIZE"
+  ) {
+    const multerCode = (err as { code?: string }).code;
+    if (multerCode === "LIMIT_FILE_SIZE") {
+      res.status(413).json({
+        error: "File size exceeds maximum limit of 5 MB",
+      });
+      return;
+    }
+    res.status(400).json({
+      error: `File upload error: ${err.message}`,
+    });
+    return;
+  }
+
+  if (
     err instanceof AppError ||
     typeof (err as AppError).statusCode === "number"
   ) {

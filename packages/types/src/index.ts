@@ -29,7 +29,30 @@ export const EMPLOYMENT_MODES = [
 
 export type EmploymentMode = (typeof EMPLOYMENT_MODES)[number];
 
-export type DocumentType = "SALARY_SLIP";
+export const DOCUMENT_TYPES = ["SALARY_SLIP"] as const;
+export type DocumentType = (typeof DOCUMENT_TYPES)[number];
+
+export const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+] as const;
+export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
+
+export const MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+export type StorageProvider = "LOCAL" | "S3";
+
+export interface DocumentDto {
+  id: string;
+  ownerUserId: string;
+  docType: DocumentType;
+  provider: StorageProvider;
+  originalFilename: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+}
 
 export const registerSchema = z.object({
   email: z.string().trim().email("Invalid email address").toLowerCase(),
