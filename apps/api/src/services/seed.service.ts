@@ -262,29 +262,18 @@ export class SeedService {
 
       const storageKey = `salary-slips/${userId}/seed-salary-slip.pdf`;
 
-      // 1. Ensure local copy exists on disk
-      try {
-        const localDriver = new LocalStorageDriver();
-        await localDriver.put({
-          key: storageKey,
-          body: SAMPLE_SALARY_SLIP_PDF,
-          mimeType: "application/pdf",
-        });
-      } catch {
-        // Ignore local filesystem issues in restricted environments
-      }
-
-      // 2. Upload to S3 if configured
-      let putResult = {
-        key: storageKey,
-        bucket: null as string | null,
-      };
-
-      if (
+      // Upload to whichever driver is actually configured for this
+      // environment — mirrors StorageService's own selection so seeded
+      // documents behave exactly like real uploads would. Falls back to
+      // local disk only if the configured S3 upload itself fails.
+      const useS3 =
         env.STORAGE_DRIVER === "s3" &&
-        env.AWS_ACCESS_KEY_ID &&
-        env.AWS_SECRET_ACCESS_KEY
-      ) {
+        !!env.AWS_ACCESS_KEY_ID &&
+        !!env.AWS_SECRET_ACCESS_KEY;
+
+      let putResult: { key: string; bucket: string | null };
+
+      if (useS3) {
         try {
           const s3Driver = new S3StorageDriver();
           putResult = await s3Driver.put({
@@ -293,8 +282,24 @@ export class SeedService {
             mimeType: "application/pdf",
           });
         } catch (s3Err) {
-          console.warn(`[Seed] S3 upload skipped for ${email}:`, s3Err);
+          console.warn(
+            `[Seed] S3 upload failed for ${email}, falling back to local disk:`,
+            s3Err,
+          );
+          const localDriver = new LocalStorageDriver();
+          putResult = await localDriver.put({
+            key: storageKey,
+            body: SAMPLE_SALARY_SLIP_PDF,
+            mimeType: "application/pdf",
+          });
         }
+      } else {
+        const localDriver = new LocalStorageDriver();
+        putResult = await localDriver.put({
+          key: storageKey,
+          body: SAMPLE_SALARY_SLIP_PDF,
+          mimeType: "application/pdf",
+        });
       }
 
       const provider = putResult.bucket ? "S3" : "LOCAL";
