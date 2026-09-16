@@ -21,6 +21,9 @@ export class AuthController {
         // is exactly when isProd is true. Same-site locally, where Lax
         // works fine over plain http://localhost.
         sameSite: isProd ? ("none" as const) : ("lax" as const),
+        // Required by CHIPS alongside SameSite=None/Secure, or browsers
+        // will start rejecting the cookie in this cross-site setup.
+        partitioned: isProd,
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       };
@@ -44,6 +47,7 @@ export class AuthController {
         httpOnly: true,
         secure: isProd,
         sameSite: isProd ? ("none" as const) : ("lax" as const),
+        partitioned: isProd,
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       };
@@ -61,6 +65,7 @@ export class AuthController {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? ("none" as const) : ("lax" as const),
+      partitioned: isProd,
       path: "/",
     };
     res.clearCookie("token", clearOptions);
