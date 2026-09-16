@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Label, ApiError, BuildingLibraryIcon } from "@repo/ui";
+import { Button, Input, Label, ApiError } from "@repo/ui";
 import { authApi } from "@/lib/api/auth";
 
 export default function AdminLoginPage() {
@@ -41,12 +41,11 @@ export default function AdminLoginPage() {
     <main className="min-h-screen flex items-center justify-center p-6 bg-slate-950">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl shadow-black/50 border border-slate-200/90 p-8 sm:p-10">
         <header className="mb-6 text-center">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 text-white mb-3 shadow-md">
-            <BuildingLibraryIcon className="w-5 h-5 text-indigo-400" />
-          </div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
-            CreditSea
-          </p>
+          <img
+            src="/logo-full.png"
+            alt="CreditSea"
+            className="h-8 w-auto mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
             Operations Portal
           </h1>

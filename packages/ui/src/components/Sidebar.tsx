@@ -29,9 +29,11 @@ export function Sidebar({ appName, appSubtitle, links, footer }: SidebarProps) {
         {/* Brand */}
         <div className="px-6 py-6 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-sm shadow-indigo-500/30">
-              C
-            </span>
+            <img
+              src="/logo-mark.jpg"
+              alt=""
+              className="w-8 h-8 rounded-lg object-cover shadow-sm shadow-indigo-500/30"
+            />
             <div>
               <p className="font-bold text-base text-slate-900 tracking-tight leading-snug">
                 {appName}

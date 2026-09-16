@@ -38,3 +38,6 @@ yarn-error.log*
 *.pem
 resources/
 docs/
+
+CLAUDE.md
+.claude

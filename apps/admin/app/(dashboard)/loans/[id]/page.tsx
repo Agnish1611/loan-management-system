@@ -387,39 +387,33 @@ export default function LoanDetailPage({
         {/* Left 2 Columns: KYC, Document, BRE, and Actions */}
         <div className="lg:col-span-2 space-y-6">
           {/* Borrower Profile & KYC Card */}
-          <div className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <div className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs space-y-1">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
               <UserIcon className="w-5 h-5 text-indigo-600" />
               <h2 className="text-sm font-bold text-slate-900">
-                Borrower KYC & Identification Profile
+                Borrower Details
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Full Name
-                </span>
-                <p className="text-sm font-semibold text-slate-900 mt-0.5">
+            <dl className="divide-y divide-slate-100">
+              <div className="flex items-center justify-between py-2.5 text-sm">
+                <dt className="text-slate-500">Name</dt>
+                <dd className="font-semibold text-slate-900">
                   {loan.borrower?.fullName ?? "—"}
-                </p>
+                </dd>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Email Address
-                </span>
-                <p className="text-sm font-semibold text-slate-900 mt-0.5">
+              <div className="flex items-center justify-between py-2.5 text-sm">
+                <dt className="text-slate-500">Email</dt>
+                <dd className="font-semibold text-slate-900">
                   {loan.borrower?.email ?? "—"}
-                </p>
+                </dd>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Permanent Account Number (PAN)
-                </span>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="font-mono text-sm font-bold text-slate-900">
+              <div className="flex items-center justify-between py-2.5 text-sm">
+                <dt className="text-slate-500">PAN</dt>
+                <dd className="flex items-center gap-2">
+                  <span className="font-mono font-semibold text-slate-900">
                     {pan}
                   </span>
                   {pan !== "—" && (
@@ -436,47 +430,41 @@ export default function LoanDetailPage({
                       Copied
                     </span>
                   )}
-                </div>
+                </dd>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Age & Date of Birth
-                </span>
-                <p className="text-sm font-semibold text-slate-900 mt-0.5">
+              <div className="flex items-center justify-between py-2.5 text-sm">
+                <dt className="text-slate-500">Age</dt>
+                <dd className="font-semibold text-slate-900">
                   {loan.applicantSnapshot.ageAtApplication} years
                   {profile?.dateOfBirth &&
-                    ` (${formatDate(profile.dateOfBirth)})`}
-                </p>
+                    ` (born ${formatDate(profile.dateOfBirth)})`}
+                </dd>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Declared Monthly Earnings
-                </span>
-                <p className="text-sm font-bold text-indigo-700 mt-0.5">
+              <div className="flex items-center justify-between py-2.5 text-sm">
+                <dt className="text-slate-500">Monthly Salary</dt>
+                <dd className="font-semibold text-indigo-700">
                   {formatRupee(salaryPaise)} / mo
-                </p>
+                </dd>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Employment Mode
-                </span>
-                <p className="text-sm font-semibold text-slate-900 mt-0.5 capitalize">
+              <div className="flex items-center justify-between py-2.5 text-sm">
+                <dt className="text-slate-500">Employment</dt>
+                <dd className="font-semibold text-slate-900 capitalize">
                   {employmentMode.toLowerCase().replace(/_/g, " ")}
-                </p>
+                </dd>
               </div>
-            </div>
+            </dl>
           </div>
 
           {/* Salary Slip Document Card */}
-          <div className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <DocumentTextIcon className="w-5 h-5 text-indigo-600" />
                 <h2 className="text-sm font-bold text-slate-900">
-                  Income Verification Document
+                  Salary Slip
                 </h2>
               </div>
               <a
@@ -485,28 +473,9 @@ export default function LoanDetailPage({
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
               >
-                <span>Open Salary Slip</span>
+                <span>Open document</span>
                 <ExternalLinkIcon className="w-3.5 h-3.5" />
               </a>
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                  Document ID
-                </span>
-                <span className="font-mono text-slate-700">
-                  {loan.salarySlipDocumentId}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                  Verification Status
-                </span>
-                <span className="font-semibold text-emerald-700">
-                  Verified Salaried PDF
-                </span>
-              </div>
             </div>
           </div>
 
@@ -516,7 +485,7 @@ export default function LoanDetailPage({
               <div className="flex items-center gap-2">
                 <ShieldCheckIcon className="w-5 h-5 text-indigo-600" />
                 <h2 className="text-sm font-bold text-slate-900">
-                  Underwriting Policy Audit (BRE Scorecard)
+                  BRE Eligibility Check
                 </h2>
               </div>
               {bre && (
@@ -528,7 +497,7 @@ export default function LoanDetailPage({
                       : "bg-rose-50 text-rose-700 ring-1 ring-rose-600/20",
                   )}
                 >
-                  {bre.passed ? "ALL RULES PASSED" : "POLICY REJECTED"}
+                  {bre.passed ? "Passed" : "Failed"}
                 </span>
               )}
             </div>
@@ -587,11 +556,11 @@ export default function LoanDetailPage({
             <div className="p-6 bg-white rounded-2xl border-2 border-indigo-200 shadow-sm space-y-5">
               <div className="border-b border-slate-100 pb-3">
                 <h3 className="text-sm font-black text-slate-900">
-                  Underwriting Decision Desk
+                  Sanction Decision
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Verify documentation and execute sanction approval or record
-                  constructive decline.
+                  Review the details above, then approve or decline this
+                  application.
                 </p>
               </div>
 
@@ -701,11 +670,11 @@ export default function LoanDetailPage({
             <div className="p-6 bg-white rounded-2xl border-2 border-indigo-200 shadow-sm space-y-5">
               <div className="border-b border-slate-100 pb-3">
                 <h3 className="text-sm font-black text-slate-900">
-                  Treasury Payout Release Desk
+                  Disburse Funds
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Verify underwriter approval notes and execute fund
-                  disbursement with bank transaction sequence.
+                  Confirm the payout reference to release funds to the
+                  borrower.
                 </p>
               </div>
 
@@ -791,15 +760,15 @@ export default function LoanDetailPage({
               <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-black text-slate-900">
-                    Repayment Ledger & Vouchers
+                    Repayments
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Record incoming repayments and track balance amortisation.
+                    Record incoming repayments and track the balance.
                   </p>
                 </div>
                 <span className="text-xs font-extrabold text-slate-900 font-mono">
                   {loan.status === "CLOSED"
-                    ? "LOAN CLOSED"
+                    ? "Loan closed"
                     : `Balance: ${formatRupee(loan.outstandingPaise)}`}
                 </span>
               </div>
@@ -808,7 +777,7 @@ export default function LoanDetailPage({
               {loan.status === "DISBURSED" && isCollectionOfficer && (
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3.5">
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    Post Repayment Voucher
+                    Record a Payment
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
@@ -859,7 +828,7 @@ export default function LoanDetailPage({
                     disabled={!utrNumber || !amountRupees}
                     onClick={handleRecordPayment}
                   >
-                    Post Payment Voucher
+                    Record Payment
                   </Button>
 
                   {paymentError && (
@@ -873,11 +842,11 @@ export default function LoanDetailPage({
               {/* Payments History Table */}
               <div>
                 <h4 className="text-xs font-bold text-slate-900 mb-2">
-                  Transaction Voucher History ({payments.length})
+                  Payment History ({payments.length})
                 </h4>
                 {payments.length === 0 ? (
                   <p className="text-xs text-slate-400 py-4 text-center italic bg-slate-50 rounded-xl">
-                    No repayment vouchers recorded yet.
+                    No repayments recorded yet.
                   </p>
                 ) : (
                   <Table>
@@ -920,22 +889,22 @@ export default function LoanDetailPage({
           <div className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs space-y-4">
             <div className="border-b border-slate-100 pb-3">
               <h2 className="text-sm font-bold text-slate-900">
-                State Transition Audit Trail
+                Activity Timeline
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Complete log of state transitions with executive attribution.
+                Every status change, with who made it and when.
               </p>
             </div>
 
             <LoanTimeline history={loan.statusHistory} />
           </div>
 
-          {/* System Identifiers */}
-          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              System References
-            </span>
-            <div className="space-y-1.5 font-mono text-[11px] text-slate-600">
+          {/* System Identifiers — collapsed, low-priority reference info */}
+          <details className="group px-5 py-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+            <summary className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider cursor-pointer select-none list-none">
+              System references
+            </summary>
+            <div className="mt-3 space-y-1.5 font-mono text-[11px] text-slate-600">
               <div className="flex justify-between">
                 <span className="text-slate-400">Loan ID:</span>
                 <span className="truncate max-w-40 text-slate-800">
@@ -961,7 +930,7 @@ export default function LoanDetailPage({
                 </span>
               </div>
             </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>
