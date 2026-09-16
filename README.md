@@ -67,7 +67,7 @@ The API supports pluggable storage drivers via `STORAGE_DRIVER`:
   STORAGE_DRIVER=local
   ```
 
-- **Option B: AWS S3 Storage (Cloud Production / Demo)**  
+- **Option B: AWS S3 Storage (Cloud Production)**  
   Stores documents in a private S3 bucket and serves downloads via short-lived (5-minute) presigned URLs:
 
   ```env
@@ -76,7 +76,6 @@ The API supports pluggable storage drivers via `STORAGE_DRIVER`:
   S3_BUCKET=your-bucket-name
   AWS_ACCESS_KEY_ID=your-aws-access-key-id
   AWS_SECRET_ACCESS_KEY=your-aws-secret-access-key
-  # S3_ENDPOINT=http://localhost:4566 # Optional: uncomment for MinIO or LocalStack
   ```
 
   > **S3 Security & Permissions**:
