@@ -1,0 +1,290 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  PageHeader,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  EmptyState,
+  PageSpinner,
+  Modal,
+  Button,
+  Label,
+  Input,
+  formatRupee,
+  formatDate,
+  ApiError,
+} from "@repo/ui";
+import { collectionApi } from "@/lib/api/ops";
+import type { OpsLoanDto, PaymentDto } from "@repo/types";
+
+export default function CollectionPage() {
+  const [loans, setLoans] = useState<OpsLoanDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<OpsLoanDto | null>(null);
+  const [payments, setPayments] = useState<PaymentDto[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+
+  // Payment form
+  const [utrNumber, setUtrNumber] = useState("");
+  const [amountRupees, setAmountRupees] = useState("");
+  const [paidAt, setPaidAt] = useState<string>(
+    () => new Date().toISOString().split("T")[0] ?? "",
+  );
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    collectionApi
+      .getLoans()
+      .then((res) => setLoans(res.loans))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function openModal(loan: OpsLoanDto) {
+    setSelected(loan);
+    setUtrNumber("");
+    setAmountRupees("");
+    setPaidAt(new Date().toISOString().split("T")[0] ?? "");
+    setError(null);
+    setPaymentsLoading(true);
+    try {
+      const res = await collectionApi.getPayments(loan.id);
+      setPayments(res.payments);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  }
+
+  function closeModal() {
+    setSelected(null);
+    setPayments([]);
+    setError(null);
+  }
+
+  async function handleRecordPayment() {
+    if (!selected) return;
+    setProcessing(true);
+    setError(null);
+    const amountPaise = Math.round(Number(amountRupees) * 100);
+    try {
+      const res = await collectionApi.recordPayment(selected.id, {
+        utrNumber: utrNumber.toUpperCase(),
+        amountPaise,
+        paidAt: new Date(paidAt || Date.now()).toISOString(),
+      });
+      // Update loan in list
+      const updatedLoan = res.loan;
+      if (updatedLoan.status === "CLOSED") {
+        setLoans((prev) => prev.filter((l) => l.id !== selected.id));
+        closeModal();
+      } else {
+        setLoans((prev) =>
+          prev.map((l) =>
+            l.id === selected.id ? { ...l, ...updatedLoan } : l,
+          ),
+        );
+        setSelected((prev) => (prev ? { ...prev, ...updatedLoan } : prev));
+        setPayments((prev) => [res.payment, ...prev]);
+        setUtrNumber("");
+        setAmountRupees("");
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Failed to record payment. Please try again.");
+      }
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  return (
+    <div>
+      <PageHeader
+        eyebrow="Collection Module"
+        title="Active Disbursed Loans"
+        subtitle="Track repayments, inspect ledger balances, and record UTR transaction vouchers"
+      />
+
+      {loading ? (
+        <PageSpinner />
+      ) : loans.length === 0 ? (
+        <EmptyState
+          title="No active loans"
+          description="All disbursed loans have been fully repaid and closed."
+        />
+      ) : (
+        <Table>
+          <Thead>
+            <Tr>
+              <Th>Reference</Th>
+              <Th>Borrower</Th>
+              <Th>Principal</Th>
+              <Th>Outstanding Balance</Th>
+              <Th>Paid</Th>
+              <Th>Total Due</Th>
+              <Th>Action</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {loans.map((loan) => (
+              <Tr key={loan.id}>
+                <Td>
+                  <span className="font-mono text-xs font-semibold text-indigo-600">
+                    {loan.loanReference}
+                  </span>
+                </Td>
+                <Td className="font-medium text-slate-900">
+                  {loan.borrower?.fullName ?? "—"}
+                </Td>
+                <Td>{formatRupee(loan.principalPaise)}</Td>
+                <Td className="font-bold text-indigo-700">
+                  {formatRupee(loan.outstandingPaise)}
+                </Td>
+                <Td className="font-semibold text-emerald-600">
+                  {formatRupee(loan.amountPaidPaise)}
+                </Td>
+                <Td>{formatRupee(loan.totalRepaymentPaise)}</Td>
+                <Td>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openModal(loan)}
+                  >
+                    Record Payment
+                  </Button>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      )}
+
+      <Modal
+        open={!!selected}
+        onClose={closeModal}
+        size="lg"
+        title={`Record Payment — ${selected?.loanReference}`}
+        description={`Remaining balance: ${selected ? formatRupee(selected.outstandingPaise) : ""}`}
+        footer={
+          <>
+            <Button variant="ghost" size="sm" onClick={closeModal}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              loading={processing}
+              onClick={handleRecordPayment}
+              disabled={!utrNumber || !amountRupees}
+            >
+              Post Payment
+            </Button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {/* Payment form */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+              New Payment Voucher
+            </h3>
+            <div>
+              <Label htmlFor="utr" required>
+                Bank UTR Number
+              </Label>
+              <Input
+                id="utr"
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value.toUpperCase())}
+                placeholder="e.g. HDFC12345678"
+                maxLength={30}
+              />
+            </div>
+            <div>
+              <Label htmlFor="amount" required>
+                Payment Amount (₹)
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                value={amountRupees}
+                onChange={(e) => setAmountRupees(e.target.value)}
+                placeholder={`Max ${formatRupee(selected?.outstandingPaise ?? 0)}`}
+                min={0.01}
+                step={0.01}
+              />
+            </div>
+            <div>
+              <Label htmlFor="paidAt" required>
+                Voucher Date
+              </Label>
+              <Input
+                id="paidAt"
+                type="date"
+                value={paidAt}
+                onChange={(e) => setPaidAt(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+              />
+            </div>
+            {error && (
+              <p className="p-3 text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">
+                {error}
+              </p>
+            )}
+          </div>
+
+          {/* Payment history */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+              Payment Ledger
+            </h3>
+            {paymentsLoading ? (
+              <p className="text-xs text-slate-400 py-4 text-center">
+                Loading history…
+              </p>
+            ) : payments.length === 0 ? (
+              <p className="text-xs text-slate-400 py-4 text-center">
+                No repayments recorded yet.
+              </p>
+            ) : (
+              <div className="max-h-60 overflow-y-auto rounded-xl border border-slate-200/90">
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>UTR</Th>
+                      <Th>Amount</Th>
+                      <Th>Balance</Th>
+                      <Th>Date</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {payments.map((p) => (
+                      <Tr key={p.id}>
+                        <Td className="font-mono text-xs font-semibold">
+                          {p.utrNumber}
+                        </Td>
+                        <Td className="font-semibold text-emerald-600">
+                          {formatRupee(p.amountPaise)}
+                        </Td>
+                        <Td>{formatRupee(p.outstandingAfterPaise)}</Td>
+                        <Td className="text-xs text-slate-400">
+                          {formatDate(p.paidAt)}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}

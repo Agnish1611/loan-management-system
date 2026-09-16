@@ -1,20 +1,19 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+import type { Metadata, Viewport } from "next";
+import { ApiProvider } from "@/lib/ApiProvider";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-});
-
 export const metadata: Metadata = {
-  title: "LMS Borrower Portal",
+  title: {
+    default: "CreditSea — Borrower Portal",
+    template: "%s | CreditSea",
+  },
   description:
-    "Borrower application portal for loan applications and status tracking",
+    "Apply for a personal loan, track your application, and manage repayments on the CreditSea Borrower Portal.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -24,8 +23,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+      <body>
+        <ApiProvider>{children}</ApiProvider>
       </body>
     </html>
   );

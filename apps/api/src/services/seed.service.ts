@@ -1,5 +1,10 @@
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
+import { env } from "@/config/index.js";
+import {
+  LocalStorageDriver,
+  S3StorageDriver,
+} from "@/services/storage/index.js";
 import {
   userRepository,
   type UserRepository,
@@ -16,6 +21,55 @@ import {
   type Role,
   type LoanStatus,
 } from "@repo/types";
+
+const SAMPLE_SALARY_SLIP_PDF = Buffer.from(
+  `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 175 >>
+stream
+BT
+/F1 20 Tf
+72 710 Td
+(CREDITSEA FINANCIAL - VERIFIED SALARY SLIP) Tj
+/F1 12 Tf
+0 -30 Td
+(Employee: Demo Borrower) Tj
+0 -20 Td
+(Employment Status: Confirmed / Full-time) Tj
+0 -20 Td
+(Net Monthly Salary: INR 50,000) Tj
+0 -20 Td
+(Verified for Loan Underwriting) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000225 00000 n 
+0000000303 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+528
+%%EOF
+`,
+);
 
 export interface SeedUserDefinition {
   email: string;
@@ -206,23 +260,69 @@ export class SeedService {
       const userId = userMap[email];
       if (!userId) continue;
 
+      const storageKey = `salary-slips/${userId}/seed-salary-slip.pdf`;
+
+      // 1. Ensure local copy exists on disk
+      try {
+        const localDriver = new LocalStorageDriver();
+        await localDriver.put({
+          key: storageKey,
+          body: SAMPLE_SALARY_SLIP_PDF,
+          mimeType: "application/pdf",
+        });
+      } catch {
+        // Ignore local filesystem issues in restricted environments
+      }
+
+      // 2. Upload to S3 if configured
+      let putResult = {
+        key: storageKey,
+        bucket: null as string | null,
+      };
+
+      if (
+        env.STORAGE_DRIVER === "s3" &&
+        env.AWS_ACCESS_KEY_ID &&
+        env.AWS_SECRET_ACCESS_KEY
+      ) {
+        try {
+          const s3Driver = new S3StorageDriver();
+          putResult = await s3Driver.put({
+            key: storageKey,
+            body: SAMPLE_SALARY_SLIP_PDF,
+            mimeType: "application/pdf",
+          });
+        } catch (s3Err) {
+          console.warn(`[Seed] S3 upload skipped for ${email}:`, s3Err);
+        }
+      }
+
+      const provider = putResult.bucket ? "S3" : "LOCAL";
+
       const existingDoc = await DocumentModel.findOne({
         ownerUserId: userId,
         docType: "SALARY_SLIP",
       });
 
       if (existingDoc) {
+        existingDoc.provider = provider;
+        existingDoc.storageKey = putResult.key;
+        existingDoc.bucket = putResult.bucket;
+        existingDoc.sizeBytes = SAMPLE_SALARY_SLIP_PDF.length;
+        existingDoc.mimeType = "application/pdf";
+        existingDoc.originalFilename = "salary-slip-2026.pdf";
+        await existingDoc.save();
         documentMap[email] = existingDoc._id.toString();
       } else {
         const newDoc = await this.docRepo.create({
           ownerUserId: userId,
           docType: "SALARY_SLIP",
-          provider: "LOCAL",
-          storageKey: `salary-slips/${userId}/seed-salary-slip.pdf`,
-          bucket: null,
+          provider,
+          storageKey: putResult.key,
+          bucket: putResult.bucket,
           originalFilename: "salary-slip-2026.pdf",
           mimeType: "application/pdf",
-          sizeBytes: 1024 * 50, // 50 KB
+          sizeBytes: SAMPLE_SALARY_SLIP_PDF.length,
         });
         documentMap[email] = newDoc._id.toString();
       }

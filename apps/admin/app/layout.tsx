@@ -1,31 +1,28 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+import type { Metadata, Viewport } from "next";
+import { ApiProvider } from "@/lib/ApiProvider";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-});
-
 export const metadata: Metadata = {
-  title: "LMS Admin & Operations Portal",
+  title: {
+    default: "CreditSea — Ops Dashboard",
+    template: "%s | CreditSea Ops",
+  },
   description:
-    "Operations dashboard for Sales, Sanction, Disbursement, Collection, and Admin",
+    "Operations dashboard for Sales, Sanction, Disbursement, Collection, and Admin teams.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+      <body>
+        <ApiProvider>{children}</ApiProvider>
       </body>
     </html>
   );

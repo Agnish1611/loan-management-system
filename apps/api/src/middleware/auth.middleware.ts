@@ -24,12 +24,25 @@ export async function requireAuth(
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
+  let token: string | undefined;
+
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(new UnauthorizedError("Authentication token is required"));
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7);
+  } else if (req.headers.cookie) {
+    const match = req.headers.cookie.match(
+      /(?:^|;\s*)(?:token|lms_token)=([^;]*)/,
+    );
+    if (match && match[1]) {
+      token = decodeURIComponent(match[1]);
+    }
+  } else if (req.query?.token && typeof req.query.token === "string") {
+    token = req.query.token;
   }
 
-  const token = authHeader.substring(7);
+  if (!token) {
+    return next(new UnauthorizedError("Authentication token is required"));
+  }
 
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;

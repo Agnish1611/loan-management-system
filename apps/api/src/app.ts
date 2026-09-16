@@ -7,7 +7,25 @@ import type { HealthCheckResponse } from "@repo/types";
 export function createApp(): Express {
   const app = express();
 
-  app.use(cors());
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+  ];
+
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(null, true);
+        }
+      },
+      credentials: true,
+    }),
+  );
   app.use(express.json());
 
   // Health check

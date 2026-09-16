@@ -12,14 +12,23 @@ import type {
 
 export class StorageService {
   private driver: StorageDriver;
+  private customDriver?: StorageDriver;
+  private localDriver: LocalStorageDriver;
+  private s3Driver?: S3StorageDriver;
 
   constructor(customDriver?: StorageDriver) {
+    this.localDriver = new LocalStorageDriver();
+    if (env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY) {
+      this.s3Driver = new S3StorageDriver();
+    }
+
     if (customDriver) {
+      this.customDriver = customDriver;
       this.driver = customDriver;
     } else if (env.STORAGE_DRIVER === "s3") {
-      this.driver = new S3StorageDriver();
+      this.driver = this.s3Driver ?? new S3StorageDriver();
     } else {
-      this.driver = new LocalStorageDriver();
+      this.driver = this.localDriver;
     }
   }
 
@@ -32,11 +41,59 @@ export class StorageService {
   }
 
   async resolve(doc: ResolveDocInput): Promise<ResolveDocOutput> {
+    if (this.customDriver) {
+      return this.customDriver.resolve(doc);
+    }
+
+    // Try target provider first, with seamless fallback if file exists in the other provider
+    if (doc.provider === "S3") {
+      const s3 = this.s3Driver ?? new S3StorageDriver();
+      try {
+        return await s3.resolve(doc);
+      } catch (s3Err) {
+        try {
+          return await this.localDriver.resolve(doc);
+        } catch {
+          throw s3Err;
+        }
+      }
+    }
+
+    if (doc.provider === "LOCAL") {
+      try {
+        return await this.localDriver.resolve(doc);
+      } catch (localErr) {
+        if (this.s3Driver) {
+          try {
+            return await this.s3Driver.resolve(doc);
+          } catch {
+            throw localErr;
+          }
+        }
+        throw localErr;
+      }
+    }
+
     return this.driver.resolve(doc);
   }
 
   async remove(doc: RemoveDocInput): Promise<void> {
-    return this.driver.remove(doc);
+    if (this.customDriver) {
+      return this.customDriver.remove(doc);
+    }
+
+    if (doc.bucket && this.s3Driver) {
+      try {
+        await this.s3Driver.remove(doc);
+      } catch {
+        // Ignore
+      }
+    }
+    try {
+      await this.localDriver.remove(doc);
+    } catch {
+      // Ignore
+    }
   }
 }
 

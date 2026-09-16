@@ -2,10 +2,12 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/config/index.js";
+import { NotFoundError } from "@/errors/index.js";
 import type {
   StorageDriver,
   PutObjectInput,
@@ -59,10 +61,38 @@ export class S3StorageDriver implements StorageDriver {
 
   async resolve(doc: ResolveDocInput): Promise<ResolveDocOutput> {
     const bucket = doc.bucket || this.defaultBucket;
+
+    try {
+      await this.client.send(
+        new HeadObjectCommand({
+          Bucket: bucket,
+          Key: doc.storageKey,
+        }),
+      );
+    } catch (err: unknown) {
+      const s3Err = err as {
+        $metadata?: { httpStatusCode?: number };
+        name?: string;
+        Code?: string;
+      };
+      if (
+        s3Err.$metadata?.httpStatusCode === 404 ||
+        s3Err.$metadata?.httpStatusCode === 403 ||
+        s3Err.name === "NotFound" ||
+        s3Err.Code === "AccessDenied"
+      ) {
+        throw new NotFoundError(
+          `Document file '${doc.storageKey}' not found in S3 bucket`,
+        );
+      }
+      throw err;
+    }
+
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: doc.storageKey,
       ResponseContentType: doc.mimeType,
+      ResponseContentDisposition: "inline",
     });
 
     const url = await getSignedUrl(this.client, command, { expiresIn: 300 }); // 5 minutes
