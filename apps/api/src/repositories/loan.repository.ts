@@ -75,6 +75,44 @@ export class LoanRepository {
       .exec();
   }
 
+  async atomicDebit(
+    loanId: string,
+    amountPaise: number,
+  ): Promise<ILoanDocument | null> {
+    return LoanModel.findOneAndUpdate(
+      {
+        _id: loanId,
+        status: "DISBURSED",
+        outstandingPaise: { $gte: amountPaise },
+      },
+      {
+        $inc: {
+          amountPaidPaise: amountPaise,
+          outstandingPaise: -amountPaise,
+        },
+      },
+      { new: true },
+    )
+      .populate("borrowerUserId", "fullName email")
+      .exec();
+  }
+
+  async autoClose(
+    loanId: string,
+    closeHistoryItem: IStatusHistoryItem,
+  ): Promise<ILoanDocument | null> {
+    return LoanModel.findOneAndUpdate(
+      { _id: loanId, status: "DISBURSED", outstandingPaise: 0 },
+      {
+        $set: { status: "CLOSED" },
+        $push: { statusHistory: closeHistoryItem },
+      },
+      { new: true },
+    )
+      .populate("borrowerUserId", "fullName email")
+      .exec();
+  }
+
   async existsByReference(loanReference: string): Promise<boolean> {
     const count = await LoanModel.countDocuments({ loanReference }).exec();
     return count > 0;

@@ -196,3 +196,4 @@ export interface LoanDto {
 }
 
 export * from "./workflow.js";
+export * from "./payment.js";

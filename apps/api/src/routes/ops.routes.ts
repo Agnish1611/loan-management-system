@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { opsController } from "@/controllers/index.js";
 import { requireAuth, requireRole, validateBody } from "@/middleware/index.js";
-import { loanSanctionSchema, loanDisburseSchema } from "@repo/types";
+import {
+  loanSanctionSchema,
+  loanDisburseSchema,
+  paymentRecordSchema,
+} from "@repo/types";
 import { ValidationError } from "@/errors/index.js";
 import type { Request, Response, NextFunction } from "express";
 
@@ -67,4 +71,27 @@ opsRouter.post(
   requireRole("DISBURSEMENT"),
   validateBody(loanDisburseSchema),
   opsController.disburseLoan,
+);
+
+// Collection module routes
+opsRouter.get(
+  "/collection/loans",
+  requireAuth,
+  requireRole("COLLECTION"),
+  opsController.getCollectionLoans,
+);
+
+opsRouter.post(
+  "/loans/:id/payments",
+  requireAuth,
+  requireRole("COLLECTION"),
+  validateBody(paymentRecordSchema),
+  opsController.recordPayment,
+);
+
+opsRouter.get(
+  "/loans/:id/payments",
+  requireAuth,
+  requireRole("COLLECTION"),
+  opsController.getLoanPayments,
 );

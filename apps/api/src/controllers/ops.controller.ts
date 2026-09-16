@@ -2,11 +2,16 @@ import type { Request, Response, NextFunction } from "express";
 import {
   loanWorkflowService,
   type LoanWorkflowService,
+  paymentService,
+  type PaymentService,
 } from "@/services/index.js";
 import type { LoanStatus } from "@repo/types";
 
 export class OpsController {
-  constructor(private service: LoanWorkflowService = loanWorkflowService) {}
+  constructor(
+    private service: LoanWorkflowService = loanWorkflowService,
+    private payments: PaymentService = paymentService,
+  ) {}
 
   getSanctionLoans = async (
     req: Request,
@@ -93,6 +98,54 @@ export class OpsController {
       res.status(200).json({
         message: "Loan disbursed successfully",
         loan,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getCollectionLoans = async (
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const loans = await this.payments.getCollectionQueue();
+
+      res.status(200).json({
+        loans,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  recordPayment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = req.params.id as string;
+      const result = await this.payments.recordPayment(id, req.body, req.user!);
+
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getLoanPayments = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = req.params.id as string;
+      const payments = await this.payments.getLoanPayments(id, req.user!);
+
+      res.status(200).json({
+        payments,
       });
     } catch (err) {
       next(err);

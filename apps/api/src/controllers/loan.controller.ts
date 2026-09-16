@@ -1,9 +1,17 @@
 import type { Request, Response, NextFunction } from "express";
-import { loanService, type LoanService } from "@/services/index.js";
+import {
+  loanService,
+  type LoanService,
+  paymentService,
+  type PaymentService,
+} from "@/services/index.js";
 import type { LoanQuoteInput } from "@repo/types";
 
 export class LoanController {
-  constructor(private service: LoanService = loanService) {}
+  constructor(
+    private service: LoanService = loanService,
+    private payments: PaymentService = paymentService,
+  ) {}
 
   quote = (req: Request, res: Response, next: NextFunction): void => {
     try {
@@ -62,6 +70,23 @@ export class LoanController {
 
       res.status(200).json({
         loan,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getPayments = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = req.params.id as string;
+      const payments = await this.payments.getLoanPayments(id, req.user!);
+
+      res.status(200).json({
+        payments,
       });
     } catch (err) {
       next(err);

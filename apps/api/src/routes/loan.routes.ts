@@ -18,3 +18,4 @@ loanRouter.post(
 );
 loanRouter.get("/mine", requireAuth, loanController.listMine);
 loanRouter.get("/:id", requireAuth, loanController.getById);
+loanRouter.get("/:id/payments", requireAuth, loanController.getPayments);
