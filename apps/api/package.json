@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "start": "node dist/index.js",
+    "start": "tsx src/index.ts",
     "seed": "tsx src/scripts/seed.ts",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit"
@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.24.4",
     "multer": "^2.4.0",
+    "tsx": "^4.19.3",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -39,7 +40,6 @@
     "mongodb-memory-server": "^11.2.0",
     "supertest": "^7.2.2",
     "tsc-alias": "^1.9.5",
-    "tsx": "^4.19.3",
     "typescript": "7.0.2"
   }
 }
