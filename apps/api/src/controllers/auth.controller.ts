@@ -11,10 +11,16 @@ export class AuthController {
   ): Promise<void> => {
     try {
       const result = await this.service.register(req.body);
+      const isProd = process.env.NODE_ENV === "production";
       const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax" as const,
+        secure: isProd,
+        // Cross-site in production (frontend and API are on different
+        // domains — e.g. Vercel and Render), so the cookie needs
+        // SameSite=None to be sent at all; None requires Secure, which
+        // is exactly when isProd is true. Same-site locally, where Lax
+        // works fine over plain http://localhost.
+        sameSite: isProd ? ("none" as const) : ("lax" as const),
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       };
@@ -33,10 +39,11 @@ export class AuthController {
   ): Promise<void> => {
     try {
       const result = await this.service.login(req.body);
+      const isProd = process.env.NODE_ENV === "production";
       const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax" as const,
+        secure: isProd,
+        sameSite: isProd ? ("none" as const) : ("lax" as const),
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       };
@@ -49,10 +56,11 @@ export class AuthController {
   };
 
   logout = async (_req: Request, res: Response): Promise<void> => {
+    const isProd = process.env.NODE_ENV === "production";
     const clearOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax" as const,
+      secure: isProd,
+      sameSite: isProd ? ("none" as const) : ("lax" as const),
       path: "/",
     };
     res.clearCookie("token", clearOptions);
