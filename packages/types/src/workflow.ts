@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { LoanStatus, Role } from "./index.js";
-import type { LoanDto } from "./index.js";
+import type { LoanStatus, Role, LoanDto, EmploymentMode } from "./index.js";
+import type { BreVerdict } from "./bre.js";
 
 export const LOAN_TRANSITIONS: Record<
   LoanStatus,
@@ -86,12 +86,30 @@ export const loanDisburseSchema = z.object({
 
 export type LoanDisburseInput = z.infer<typeof loanDisburseSchema>;
 
+export interface OpsBorrowerProfileDto {
+  panNumber: string;
+  dateOfBirth: string;
+  monthlySalaryPaise: number;
+  employmentMode: EmploymentMode;
+  bre: BreVerdict;
+}
+
 export interface OpsLoanBorrowerInfo {
   id: string;
   fullName: string;
   email: string;
+  profile?: OpsBorrowerProfileDto | null;
 }
 
 export interface OpsLoanDto extends LoanDto {
   borrower?: OpsLoanBorrowerInfo;
 }
+
+export const opsLoansQuerySchema = z.object({
+  status: z
+    .enum(["APPLIED", "SANCTIONED", "REJECTED", "DISBURSED", "CLOSED", "ALL"])
+    .default("ALL"),
+  search: z.string().trim().optional(),
+});
+
+export type OpsLoansQueryInput = z.infer<typeof opsLoansQuerySchema>;

@@ -11,6 +11,7 @@ import {
   loanDisburseSchema,
   paymentRecordSchema,
   salesLeadQuerySchema,
+  opsLoansQuerySchema,
 } from "@repo/types";
 import { ValidationError } from "@/errors/index.js";
 import type { Request, Response, NextFunction } from "express";
@@ -109,4 +110,41 @@ opsRouter.get(
   requireRole("SALES"),
   validateQuery(salesLeadQuerySchema),
   opsController.getSalesLeads,
+);
+
+opsRouter.get(
+  "/sales/leads/:id",
+  requireAuth,
+  requireRole("SALES"),
+  opsController.getSalesLeadById,
+);
+
+// All-loans ledger and analytics for ops officers
+opsRouter.get(
+  "/loans",
+  requireAuth,
+  requireRole("SALES", "SANCTION", "DISBURSEMENT", "COLLECTION"),
+  validateQuery(opsLoansQuerySchema),
+  opsController.getAllLoans,
+);
+
+opsRouter.get(
+  "/loans/:id",
+  requireAuth,
+  requireRole("SALES", "SANCTION", "DISBURSEMENT", "COLLECTION"),
+  opsController.getLoanById,
+);
+
+opsRouter.get(
+  "/activity",
+  requireAuth,
+  requireRole("SALES", "SANCTION", "DISBURSEMENT", "COLLECTION"),
+  opsController.getRecentActivity,
+);
+
+opsRouter.get(
+  "/stats",
+  requireAuth,
+  requireRole("SALES", "SANCTION", "DISBURSEMENT", "COLLECTION"),
+  opsController.getStats,
 );

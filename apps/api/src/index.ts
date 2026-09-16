@@ -5,13 +5,13 @@ import { connectDB, disconnectDB } from "@repo/database";
 async function bootstrap() {
   try {
     await connectDB(env.MONGO_URI);
-    console.log("📦 Connected to MongoDB");
+    console.log("[db] Connected to MongoDB");
 
     const server = app.listen(env.PORT, () => {
       console.log(
-        `🚀 LMS API listening on port ${env.PORT} in ${env.NODE_ENV} mode`,
+        `[server] LMS API listening on port ${env.PORT} in ${env.NODE_ENV} mode`,
       );
-      console.log(`👉 Health check: http://localhost:${env.PORT}/health`);
+      console.log(`[server] Health check: http://localhost:${env.PORT}/health`);
     });
 
     const shutdown = async () => {

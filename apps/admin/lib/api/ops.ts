@@ -18,6 +18,9 @@ export const salesApi = {
     apiClient.get<{ leads: SalesLeadDto[] }>(
       `/ops/sales/leads${buildQuery(query as Record<string, string>)}`,
     ),
+
+  getLeadById: (leadId: string) =>
+    apiClient.get<{ lead: SalesLeadDto }>(`/ops/sales/leads/${leadId}`),
 };
 
 // ── Sanction module
@@ -59,4 +62,41 @@ export const collectionApi = {
 
   getPayments: (loanId: string) =>
     apiClient.get<{ payments: PaymentDto[] }>(`/ops/loans/${loanId}/payments`),
+};
+
+// ── Global Operations Ledger & Analytics
+export interface RecentActivityItem {
+  loanId: string;
+  loanReference: string;
+  borrowerName: string;
+  from: string | null;
+  to: string;
+  byUserId: string | null;
+  byUserName?: string | null;
+  byUserRole?: string | null;
+  reason: string | null;
+  at: string;
+}
+
+export interface PortfolioStats {
+  totalDisbursedPaise: number;
+  totalCollectedPaise: number;
+  outstandingPaise: number;
+}
+
+export const opsApi = {
+  getAllLoans: (query: { status?: string; search?: string } = {}) =>
+    apiClient.get<{ loans: OpsLoanDto[]; count: number }>(
+      `/ops/loans${buildQuery(query as Record<string, string>)}`,
+    ),
+
+  getLoanById: (loanId: string) =>
+    apiClient.get<{ loan: OpsLoanDto }>(`/ops/loans/${loanId}`),
+
+  getActivity: (limit = 10) =>
+    apiClient.get<{ activity: RecentActivityItem[] }>(
+      `/ops/activity?limit=${limit}`,
+    ),
+
+  getStats: () => apiClient.get<PortfolioStats>("/ops/stats"),
 };

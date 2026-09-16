@@ -11,6 +11,7 @@ import type { SanitizedUser } from "@repo/types";
 function buildLinks(role: string): SidebarLinkItem[] {
   const all: SidebarLinkItem[] = [
     { href: "/dashboard", label: "Overview" },
+    { href: "/loans", label: "All Loans" },
     { href: "/sales", label: "Sales Leads" },
     { href: "/sanction", label: "Sanction Queue" },
     { href: "/disbursement", label: "Disbursement Queue" },
@@ -20,13 +21,13 @@ function buildLinks(role: string): SidebarLinkItem[] {
   if (role === "ADMIN") return all;
 
   const roleMap: Record<string, string[]> = {
-    SALES: ["/dashboard", "/sales"],
-    SANCTION: ["/dashboard", "/sanction"],
-    DISBURSEMENT: ["/dashboard", "/disbursement"],
-    COLLECTION: ["/dashboard", "/collection"],
+    SALES: ["/dashboard", "/loans", "/sales"],
+    SANCTION: ["/dashboard", "/loans", "/sanction"],
+    DISBURSEMENT: ["/dashboard", "/loans", "/disbursement"],
+    COLLECTION: ["/dashboard", "/loans", "/collection"],
   };
 
-  const allowed = roleMap[role] ?? ["/dashboard"];
+  const allowed = roleMap[role] ?? ["/dashboard", "/loans"];
   return all.filter((l) => allowed.includes(l.href));
 }
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../lib/utils";
+import { SparklesIcon } from "./Icons";
 
 export interface EmptyStateProps {
   title: string;
@@ -26,8 +27,8 @@ export function EmptyState({
       {icon ? (
         <div className="mb-4 text-slate-400 text-3xl">{icon}</div>
       ) : (
-        <div className="mb-4 w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg font-bold shadow-inner">
-          ✦
+        <div className="mb-4 w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-inner">
+          <SparklesIcon className="w-6 h-6" />
         </div>
       )}
       <h3 className="text-base font-semibold text-slate-900">{title}</h3>

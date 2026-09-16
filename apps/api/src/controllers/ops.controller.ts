@@ -7,7 +7,11 @@ import {
   salesService,
   type SalesService,
 } from "@/services/index.js";
-import type { LoanStatus, SalesLeadQueryInput } from "@repo/types";
+import type {
+  LoanStatus,
+  SalesLeadQueryInput,
+  OpsLoansQueryInput,
+} from "@repo/types";
 
 export class OpsController {
   constructor(
@@ -167,6 +171,103 @@ export class OpsController {
       res.status(200).json({
         leads,
         count: leads.length,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getSalesLeadById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = req.params.id as string;
+      const lead = await this.sales.getLeadById(id);
+
+      res.status(200).json({
+        lead,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getAllLoans = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const query = req.query as unknown as OpsLoansQueryInput;
+      const loans = await this.service.getAllLoans(query);
+
+      res.status(200).json({
+        loans,
+        count: loans.length,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getLoanById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const id = req.params.id as string;
+      const loan = await this.service.getOpsLoanById(id);
+
+      res.status(200).json({
+        loan,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getRecentActivity = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const limit = req.query.limit ? Number(req.query.limit) : 10;
+      const activity = await this.service.getRecentActivity(limit);
+
+      res.status(200).json({
+        activity,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getStats = async (
+    _req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const allLoans = await this.service.getAllLoans();
+      const totalDisbursedPaise = allLoans
+        .filter((l) => ["DISBURSED", "CLOSED"].includes(l.status))
+        .reduce((sum, l) => sum + l.principalPaise, 0);
+      const totalCollectedPaise = allLoans.reduce(
+        (sum, l) => sum + l.amountPaidPaise,
+        0,
+      );
+      const outstandingPaise = allLoans
+        .filter((l) => l.status === "DISBURSED")
+        .reduce((sum, l) => sum + l.outstandingPaise, 0);
+
+      res.status(200).json({
+        totalDisbursedPaise,
+        totalCollectedPaise,
+        outstandingPaise,
       });
     } catch (err) {
       next(err);

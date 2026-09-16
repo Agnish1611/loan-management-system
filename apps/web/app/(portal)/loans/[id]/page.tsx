@@ -16,6 +16,8 @@ import {
   formatRupee,
   formatDate,
   formatDateTime,
+  DocumentTextIcon,
+  ExternalLinkIcon,
 } from "@repo/ui";
 import { loansApi } from "@/lib/api/loans";
 import type { LoanDto, PaymentDto } from "@repo/types";
@@ -151,7 +153,9 @@ export default function LoanDetailPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
             >
-              📄 View Attached Salary Slip ↗
+              <DocumentTextIcon className="w-4 h-4 text-indigo-500" />
+              <span>View Attached Salary Slip</span>
+              <ExternalLinkIcon className="w-3.5 h-3.5 text-indigo-400" />
             </a>
           </div>
         </div>

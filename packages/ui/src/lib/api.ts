@@ -26,10 +26,41 @@ export class ApiError extends Error {
     public readonly code: string,
     message: string,
     public readonly details?: unknown,
+    public readonly data?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+function parseErrorMessage(
+  status: number,
+  json: unknown,
+): { code: string; message: string; details?: unknown } {
+  if (!json || typeof json !== "object") {
+    return { code: "UNKNOWN", message: `HTTP ${status}` };
+  }
+
+  const err = json as Record<string, any>;
+  const code = err.code || "UNKNOWN";
+
+  // Check if details has validation issues from Zod
+  if (Array.isArray(err.details) && err.details.length > 0) {
+    const detailMessages = err.details
+      .map((d: any) => (typeof d === "string" ? d : d?.message))
+      .filter(Boolean);
+    if (detailMessages.length > 0) {
+      return { code, message: detailMessages.join(". "), details: err.details };
+    }
+  }
+
+  const message =
+    err.message ||
+    err.error ||
+    (typeof err.details === "string" ? err.details : null) ||
+    `HTTP ${status}`;
+
+  return { code, message, details: err.details };
 }
 
 async function request<T>(
@@ -64,16 +95,13 @@ async function request<T>(
   }
 
   if (!res.ok) {
-    const err = json as {
-      message?: string;
-      code?: string;
-      details?: unknown;
-    } | null;
+    const parsed = parseErrorMessage(res.status, json);
     throw new ApiError(
       res.status,
-      err?.code ?? "UNKNOWN",
-      err?.message ?? `HTTP ${res.status}`,
-      err?.details,
+      parsed.code,
+      parsed.message,
+      parsed.details,
+      json,
     );
   }
 
@@ -101,11 +129,13 @@ async function upload<T>(path: string, formData: FormData): Promise<T> {
   }
 
   if (!res.ok) {
-    const err = json as { message?: string; code?: string } | null;
+    const parsed = parseErrorMessage(res.status, json);
     throw new ApiError(
       res.status,
-      err?.code ?? "UNKNOWN",
-      err?.message ?? `HTTP ${res.status}`,
+      parsed.code,
+      parsed.message,
+      parsed.details,
+      json,
     );
   }
 

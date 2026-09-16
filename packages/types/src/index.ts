@@ -166,6 +166,9 @@ export interface LoanStatusHistoryItem {
   from: LoanStatus | null;
   to: LoanStatus;
   byUserId: string | null;
+  byUserName?: string | null;
+  byUserRole?: Role | null;
+  byUserEmail?: string | null;
   reason: string | null;
   at: string;
 }

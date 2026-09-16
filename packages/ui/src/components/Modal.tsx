@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "../lib/utils";
+import { XMarkIcon } from "./Icons";
 
 export interface ModalProps {
   open: boolean;
@@ -10,7 +11,7 @@ export interface ModalProps {
   description?: string;
   children?: ReactNode;
   footer?: ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
@@ -18,6 +19,7 @@ const sizeStyles: Record<NonNullable<ModalProps["size"]>, string> = {
   sm: "max-w-md",
   md: "max-w-lg",
   lg: "max-w-2xl",
+  xl: "max-w-4xl",
 };
 
 export function Modal({
@@ -87,11 +89,11 @@ export function Modal({
             )}
           </div>
           <button
-            className="text-slate-400 hover:text-slate-700 rounded-lg p-1.5 hover:bg-slate-100 transition-colors cursor-pointer text-base leading-none"
+            className="text-slate-400 hover:text-slate-700 rounded-lg p-1.5 hover:bg-slate-100 transition-colors cursor-pointer"
             onClick={onClose}
             aria-label="Close modal"
           >
-            ✕
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 

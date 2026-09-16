@@ -11,6 +11,7 @@ import {
   Badge,
   formatDate,
   ApiError,
+  CheckIcon,
 } from "@repo/ui";
 import { borrowerApi } from "@/lib/api/borrower";
 import type {
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   // Form state
@@ -38,6 +40,7 @@ export default function ProfilePage() {
       .getProfile()
       .then((res) => {
         const p = res.profile;
+        if (!p) return;
         setProfile(p);
         setPanNumber(p.panNumber);
         setDateOfBirth(p.dateOfBirth.split("T")[0] ?? "");
@@ -47,6 +50,7 @@ export default function ProfilePage() {
       .catch((err) => {
         if (err instanceof ApiError && err.status === 404) {
           // No profile yet — blank form
+          return;
         }
       })
       .finally(() => setLoading(false));
@@ -55,13 +59,46 @@ export default function ProfilePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setWarning(null);
     setSuccess(false);
-    if (!employmentMode) return;
+
+    const cleanPan = panNumber.trim().toUpperCase();
+    if (!cleanPan) {
+      setError("Please enter your PAN number.");
+      return;
+    }
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(cleanPan)) {
+      setError(
+        "Invalid PAN format. Must be 5 uppercase letters, 4 digits, and 1 letter (e.g. ABCDE1234F).",
+      );
+      return;
+    }
+
+    if (!dateOfBirth) {
+      setError("Please select your date of birth.");
+      return;
+    }
+
+    if (!monthlySalary.trim()) {
+      setError("Please enter your monthly salary.");
+      return;
+    }
+
+    const salaryNum = Number(monthlySalary);
+    if (isNaN(salaryNum) || salaryNum < 0) {
+      setError("Monthly salary must be a positive number.");
+      return;
+    }
+
+    if (!employmentMode) {
+      setError("Please select an employment mode.");
+      return;
+    }
 
     const payload: BorrowerProfileUpsertInput = {
-      panNumber: panNumber.toUpperCase(),
+      panNumber: cleanPan,
       dateOfBirth,
-      monthlySalary: Number(monthlySalary),
+      monthlySalary: salaryNum,
       employmentMode,
     };
 
@@ -69,7 +106,17 @@ export default function ProfilePage() {
     try {
       const res = await borrowerApi.upsertProfile(payload);
       setProfile(res.profile);
-      setSuccess(true);
+      if (res.isEligible) {
+        setSuccess(true);
+        setWarning(null);
+        setError(null);
+      } else {
+        setSuccess(false);
+        setWarning(
+          "Profile saved. However, you do not currently meet baseline loan eligibility criteria. Please review the scorecard above.",
+        );
+        setError(null);
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -228,9 +275,22 @@ export default function ProfilePage() {
             {error}
           </p>
         )}
+        {warning && (
+          <div className="p-3.5 text-xs font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+            <p className="font-semibold text-amber-950">{warning}</p>
+            <p className="text-amber-800">
+              You can update your details or apply once you meet the minimum
+              eligibility criteria.
+            </p>
+          </div>
+        )}
         {success && (
-          <p className="p-3 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl">
-            ✓ Profile saved successfully. Eligibility check has run.
+          <p className="p-3 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl inline-flex items-center gap-1.5 w-full">
+            <CheckIcon className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              Profile saved successfully. Eligibility check has run and
+              approved.
+            </span>
           </p>
         )}
 

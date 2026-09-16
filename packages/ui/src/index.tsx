@@ -34,6 +34,17 @@ export type { ModalProps } from "./components/Modal";
 export { Sidebar } from "./components/Sidebar";
 export type { SidebarProps, SidebarLinkItem } from "./components/Sidebar";
 
+export { LoanTimeline } from "./components/LoanTimeline";
+export type { LoanTimelineProps } from "./components/LoanTimeline";
+
+export { BorrowerProfileModal } from "./components/BorrowerProfileModal";
+export type { BorrowerProfileModalProps } from "./components/BorrowerProfileModal";
+
+export { LeadProfileModal } from "./components/LeadProfileModal";
+export type { LeadProfileModalProps } from "./components/LeadProfileModal";
+
+export * from "./components/Icons";
+
 // ── Hooks
 export { useLocalStorage } from "./hooks/useLocalStorage";
 export { useDebounce } from "./hooks/useDebounce";

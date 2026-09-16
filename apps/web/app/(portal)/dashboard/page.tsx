@@ -69,7 +69,7 @@ export default function DashboardPage() {
               </h2>
               <Link
                 href={`/loans/${activeLoan.id}`}
-                className="block rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/20 to-white p-6 sm:p-7 shadow-sm shadow-indigo-100/50 hover:shadow-md hover:border-indigo-300/80 transition-all duration-200 group"
+                className="block rounded-2xl border border-indigo-100 bg-linear-to-br from-white via-indigo-50/20 to-white p-6 sm:p-7 shadow-sm shadow-indigo-100/50 hover:shadow-md hover:border-indigo-300/80 transition-all duration-200 group"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
                   <div>

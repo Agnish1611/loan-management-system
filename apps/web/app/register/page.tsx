@@ -37,7 +37,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 via-indigo-50/40 to-slate-100">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-linear-to-br from-slate-50 via-indigo-50/40 to-slate-100">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-200/90 p-8 sm:p-10">
         <header className="mb-6 text-center">
           <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold text-lg mb-3 shadow-md shadow-indigo-500/30">

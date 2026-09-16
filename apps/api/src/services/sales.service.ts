@@ -1,4 +1,5 @@
 import { userRepository, type UserRepository } from "@/repositories/index.js";
+import { NotFoundError } from "@/errors/index.js";
 import {
   formatSalesLeadDto,
   type SalesLeadQueryInput,
@@ -15,6 +16,16 @@ export class SalesService {
     });
 
     return rawLeads.map((doc) => formatSalesLeadDto(doc));
+  }
+
+  async getLeadById(userId: string): Promise<SalesLeadDto> {
+    const rawLeads = await this.userRepo.aggregateSalesLeads({
+      userId,
+    });
+    if (!rawLeads.length || !rawLeads[0]) {
+      throw new NotFoundError(`Sales lead with ID ${userId} not found`);
+    }
+    return formatSalesLeadDto(rawLeads[0]);
   }
 }
 

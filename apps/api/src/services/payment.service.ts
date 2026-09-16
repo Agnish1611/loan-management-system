@@ -117,13 +117,17 @@ export class PaymentService {
       }
     }
 
+    const [enrichedLoan] = await loanWorkflowService.enrichOpsLoans([
+      finalLoanDoc,
+    ]);
+
     return {
       message:
         finalLoanDoc.status === "CLOSED"
           ? "Payment recorded successfully. Loan is fully repaid and closed."
           : "Payment recorded successfully",
       payment: formatPaymentDto(paymentDoc),
-      loan: loanWorkflowService.formatOpsLoan(finalLoanDoc),
+      loan: enrichedLoan ?? loanWorkflowService.formatOpsLoan(finalLoanDoc),
     };
   }
 
@@ -150,8 +154,7 @@ export class PaymentService {
   }
 
   async getCollectionQueue(): Promise<OpsLoanDto[]> {
-    const loans = await this.loanRepo.findQueueByStatus("DISBURSED");
-    return loans.map((l) => loanWorkflowService.formatOpsLoan(l));
+    return loanWorkflowService.getCollectionQueue();
   }
 }
 

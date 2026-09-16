@@ -10,13 +10,15 @@ export function errorHandler(
 ): void {
   if (err instanceof ZodError || err.name === "ZodError") {
     const zodErr = err as ZodError;
+    const issues = zodErr.issues || [];
+    const firstMessage = issues[0]?.message;
     res.status(400).json({
       error: "Validation failed",
-      details:
-        zodErr.issues?.map((e) => ({
-          path: e.path.join("."),
-          message: e.message,
-        })) || [],
+      message: firstMessage || "Validation failed",
+      details: issues.map((e) => ({
+        path: e.path.join("."),
+        message: e.message,
+      })),
     });
     return;
   }
@@ -29,11 +31,13 @@ export function errorHandler(
     if (multerCode === "LIMIT_FILE_SIZE") {
       res.status(413).json({
         error: "File size exceeds maximum limit of 5 MB",
+        message: "File size exceeds maximum limit of 5 MB",
       });
       return;
     }
     res.status(400).json({
       error: `File upload error: ${err.message}`,
+      message: `File upload error: ${err.message}`,
     });
     return;
   }
@@ -45,6 +49,7 @@ export function errorHandler(
     const appErr = err as AppError;
     res.status(appErr.statusCode || 500).json({
       error: appErr.message,
+      message: appErr.message,
     });
     return;
   }
@@ -53,6 +58,7 @@ export function errorHandler(
   if ((err as { code?: number }).code === 11000) {
     res.status(409).json({
       error: "Duplicate field value entered",
+      message: "Duplicate field value entered",
     });
     return;
   }

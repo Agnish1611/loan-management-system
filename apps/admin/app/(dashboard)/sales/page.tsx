@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   PageHeader,
   Table,
@@ -19,6 +20,7 @@ import {
   useDebounce,
   formatLeadStage,
   cn,
+  ArrowRightIcon,
 } from "@repo/ui";
 import { salesApi } from "@/lib/api/ops";
 import type { SalesLeadDto } from "@repo/types";
@@ -47,16 +49,16 @@ export default function SalesLeadsPage() {
   }, [stage, debouncedSearch]);
 
   return (
-    <div>
+    <div className="space-y-6 w-full min-w-0">
       <PageHeader
         eyebrow="Sales Module"
         title="Leads"
-        subtitle="Borrowers registered on the platform who have not yet applied for a loan"
+        subtitle="Inspect registered borrower profiles, review underwriting eligibility, and execute proactive outreach"
       />
 
       {/* Filters Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="inline-flex p-1 rounded-xl bg-slate-200/70 border border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="inline-flex flex-wrap p-1 rounded-xl bg-slate-200/70 border border-slate-200">
           {STAGES.map((s) => (
             <button
               key={s}
@@ -73,11 +75,12 @@ export default function SalesLeadsPage() {
           ))}
         </div>
 
-        <div className="w-full sm:w-80">
+        <div className="w-full sm:w-72">
           <Input
             placeholder="Search by name, email, PAN…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="text-xs"
           />
         </div>
       </div>
@@ -93,50 +96,79 @@ export default function SalesLeadsPage() {
         <Table>
           <Thead>
             <Tr>
-              <Th>Borrower Name</Th>
-              <Th>Email Address</Th>
+              <Th>Borrower</Th>
               <Th>Stage</Th>
-              <Th>Declared Salary</Th>
-              <Th>Employment</Th>
+              <Th>Declared Income</Th>
               <Th>Registered On</Th>
               <Th>BRE Verdict</Th>
+              <Th className="text-right">Action</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {leads.map((lead) => (
-              <Tr key={lead.userId}>
-                <Td className="font-medium text-slate-900">{lead.fullName}</Td>
-                <Td className="text-slate-500">{lead.email}</Td>
-                <Td>
-                  <StatusBadge
-                    status={lead.stage}
-                    label={formatLeadStage(lead.stage)}
-                  />
-                </Td>
-                <Td className="font-semibold text-slate-800">
-                  {lead.profile
-                    ? formatRupee(lead.profile.monthlySalaryPaise)
-                    : "—"}
-                </Td>
-                <Td className="text-slate-600">
-                  {lead.profile
-                    ? lead.profile.employmentMode.replace("_", " ")
-                    : "—"}
-                </Td>
-                <Td className="text-xs text-slate-500">
-                  {formatDate(lead.registeredAt)}
-                </Td>
-                <Td>
-                  {lead.bre ? (
-                    <Badge variant={lead.bre.passed ? "success" : "danger"}>
-                      {lead.bre.passed ? "Pass" : "Fail"}
-                    </Badge>
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </Td>
-              </Tr>
-            ))}
+            {leads.map((lead) => {
+              const pan = lead.profile?.panNumber;
+              return (
+                <Tr key={lead.userId}>
+                  <Td>
+                    <div className="font-semibold text-slate-900">
+                      <Link
+                        href={`/sales/${lead.userId}`}
+                        className="hover:text-indigo-600 hover:underline"
+                      >
+                        {lead.fullName}
+                      </Link>
+                    </div>
+                    <div className="text-xs text-slate-400 truncate max-w-55">
+                      {lead.email}
+                    </div>
+                    {pan && (
+                      <span className="inline-block mt-0.5 font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                        {pan}
+                      </span>
+                    )}
+                  </Td>
+                  <Td>
+                    <StatusBadge
+                      status={lead.stage}
+                      label={formatLeadStage(lead.stage)}
+                    />
+                  </Td>
+                  <Td>
+                    <div className="font-semibold text-slate-800">
+                      {lead.profile
+                        ? formatRupee(lead.profile.monthlySalaryPaise)
+                        : "—"}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {lead.profile
+                        ? lead.profile.employmentMode.replace("_", " ")
+                        : "No profile"}
+                    </div>
+                  </Td>
+                  <Td className="text-xs text-slate-500">
+                    {formatDate(lead.registeredAt)}
+                  </Td>
+                  <Td>
+                    {lead.bre ? (
+                      <Badge variant={lead.bre.passed ? "success" : "danger"}>
+                        {lead.bre.passed ? "Pass" : "Fail"}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-slate-400">Pending</span>
+                    )}
+                  </Td>
+                  <Td className="text-right">
+                    <Link
+                      href={`/sales/${lead.userId}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                    >
+                      View Lead
+                      <ArrowRightIcon className="w-3.5 h-3.5 text-slate-400" />
+                    </Link>
+                  </Td>
+                </Tr>
+              );
+            })}
           </Tbody>
         </Table>
       )}

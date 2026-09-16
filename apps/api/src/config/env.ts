@@ -65,7 +65,10 @@ const envSchema = z
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("❌ Invalid environment variables:", parsed.error.format());
+  console.error(
+    "[config] Invalid environment variables:",
+    parsed.error.format(),
+  );
   throw new Error("Invalid environment configuration");
 }
 

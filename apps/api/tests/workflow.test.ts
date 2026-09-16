@@ -593,5 +593,135 @@ describe("Phase 6: Loan Workflow State Machine & Ops Transition Tests", () => {
         .set("Authorization", `Bearer ${borrowerToken}`);
       expect(resBorrower.status).toBe(403);
     });
+
+    describe("Global Ledger & Operations Analytics (GET /api/v1/ops/loans, /activity, /stats)", () => {
+      it("allows ops officer to query all loans with status filter and search", async () => {
+        // Query ALL
+        const resAll = await request(app)
+          .get("/api/v1/ops/loans")
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(resAll.status).toBe(200);
+        expect(resAll.body.loans.length).toBeGreaterThanOrEqual(4);
+        expect(resAll.body.count).toBeGreaterThanOrEqual(4);
+
+        // Query by status filter
+        const resSanctioned = await request(app)
+          .get("/api/v1/ops/loans?status=SANCTIONED")
+          .set("Authorization", `Bearer ${sanctionOfficerToken}`);
+
+        expect(resSanctioned.status).toBe(200);
+        expect(resSanctioned.body.loans).toHaveLength(1);
+        expect(resSanctioned.body.loans[0].loanReference).toContain("Q_SANCT1");
+
+        // Query by search keyword
+        const resSearch = await request(app)
+          .get("/api/v1/ops/loans?search=Karan")
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(resSearch.status).toBe(200);
+        expect(resSearch.body.loans).toHaveLength(1);
+        expect(resSearch.body.loans[0].borrower.fullName).toBe("Karan Kapoor");
+      });
+
+      it("returns recent activity audit events with operator details", async () => {
+        const res = await request(app)
+          .get("/api/v1/ops/activity?limit=5")
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body.activity)).toBe(true);
+        expect(res.body.activity.length).toBeGreaterThan(0);
+        expect(res.body.activity[0]).toHaveProperty("loanReference");
+        expect(res.body.activity[0]).toHaveProperty("to");
+      });
+
+      it("returns portfolio stats with total disbursed, collected, and outstanding principal", async () => {
+        const res = await request(app)
+          .get("/api/v1/ops/stats")
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty("totalDisbursedPaise");
+        expect(res.body).toHaveProperty("totalCollectedPaise");
+        expect(res.body).toHaveProperty("outstandingPaise");
+        expect(typeof res.body.totalDisbursedPaise).toBe("number");
+      });
+
+      it("blocks BORROWER from accessing global ledger or analytics with 403", async () => {
+        const resLoans = await request(app)
+          .get("/api/v1/ops/loans")
+          .set("Authorization", `Bearer ${borrowerToken}`);
+        expect(resLoans.status).toBe(403);
+
+        const resActivity = await request(app)
+          .get("/api/v1/ops/activity")
+          .set("Authorization", `Bearer ${borrowerToken}`);
+        expect(resActivity.status).toBe(403);
+
+        const resStats = await request(app)
+          .get("/api/v1/ops/stats")
+          .set("Authorization", `Bearer ${borrowerToken}`);
+        expect(resStats.status).toBe(403);
+      });
+
+      it("GET /api/v1/ops/loans/:id returns enriched loan with borrower name, email, and PAN", async () => {
+        const bTest = await UserModel.create({
+          email: "test.pan@creditsea.com",
+          passwordHash: "hash123",
+          fullName: "Aarav Patel",
+          role: "BORROWER",
+        });
+
+        await BorrowerProfileModel.create({
+          userId: bTest._id,
+          panNumber: "ABCDE1234F",
+          dateOfBirth: new Date("1995-05-15"),
+          monthlySalaryPaise: 5000000,
+          employmentMode: "SALARIED",
+          bre: {
+            passed: true,
+            evaluatedAt: new Date(),
+            ageAtEvaluation: 29,
+            results: [],
+          },
+        });
+
+        const testLoan = await createTestLoan("APPLIED", "TEST_PAN", bTest._id);
+
+        const res = await request(app)
+          .get(`/api/v1/ops/loans/${testLoan._id}`)
+          .set("Authorization", `Bearer ${sanctionOfficerToken}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.loan).toBeDefined();
+        expect(res.body.loan.id).toBe(testLoan._id.toString());
+        expect(res.body.loan.borrower).toBeDefined();
+        expect(res.body.loan.borrower.fullName).toBe("Aarav Patel");
+        expect(res.body.loan.borrower.email).toBe("test.pan@creditsea.com");
+        expect(res.body.loan.borrower.profile).toBeDefined();
+        expect(res.body.loan.borrower.profile.panNumber).toBe("ABCDE1234F");
+        expect(res.body.loan.borrower.profile.bre).toBeDefined();
+        expect(res.body.loan.borrower.profile.bre.passed).toBe(true);
+      });
+
+      it("GET /api/v1/ops/loans/:id returns 404 for non-existent loan", async () => {
+        const fakeId = new Types.ObjectId().toString();
+        const res = await request(app)
+          .get(`/api/v1/ops/loans/${fakeId}`)
+          .set("Authorization", `Bearer ${adminToken}`);
+
+        expect(res.status).toBe(404);
+      });
+
+      it("GET /api/v1/ops/loans/:id blocks BORROWER with 403", async () => {
+        const testLoan = await createTestLoan("APPLIED");
+        const res = await request(app)
+          .get(`/api/v1/ops/loans/${testLoan._id}`)
+          .set("Authorization", `Bearer ${borrowerToken}`);
+
+        expect(res.status).toBe(403);
+      });
+    });
   });
 });

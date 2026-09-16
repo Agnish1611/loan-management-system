@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { UserModel, type IUserDocument } from "@/models/index.js";
 import type { Role } from "@repo/types";
 
@@ -58,10 +59,16 @@ export class UserRepository {
   async aggregateSalesLeads(filter: {
     stage?: string;
     search?: string;
+    userId?: string;
   }): Promise<any[]> {
     const pipeline: any[] = [
       // 1. Only consider registered borrowers
-      { $match: { role: "BORROWER" } },
+      {
+        $match: {
+          role: "BORROWER",
+          ...(filter.userId ? { _id: new Types.ObjectId(filter.userId) } : {}),
+        },
+      },
 
       // 2. Lookup loans to find out if the borrower has applied for any loan
       {

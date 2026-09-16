@@ -11,6 +11,8 @@ import {
   formatRupee,
   ApiError,
   useDebounce,
+  CheckIcon,
+  DocumentTextIcon,
 } from "@repo/ui";
 import { loansApi, type LoanQuoteResult } from "@/lib/api/loans";
 import { documentsApi } from "@/lib/api/documents";
@@ -55,6 +57,10 @@ export default function ApplyPage() {
     borrowerApi
       .getProfile()
       .then((res) => {
+        if (!res.profile) {
+          setBreState("no_profile");
+          return;
+        }
         setBreState(res.profile.bre?.passed ? "passed" : "failed");
       })
       .catch((err) => {
@@ -332,8 +338,11 @@ export default function ApplyPage() {
                 />
                 <div className="text-sm font-medium text-slate-700">
                   {file ? (
-                    <span className="text-indigo-600 font-semibold">
-                      📄 {file.name} ({(file.size / 1024).toFixed(0)} KB)
+                    <span className="inline-flex items-center gap-1.5 text-indigo-600 font-semibold">
+                      <DocumentTextIcon className="w-4 h-4 text-indigo-500" />
+                      <span>
+                        {file.name} ({(file.size / 1024).toFixed(0)} KB)
+                      </span>
                     </span>
                   ) : (
                     <span>Click or drag file here to upload</span>
@@ -347,8 +356,9 @@ export default function ApplyPage() {
                 </p>
               )}
               {documentId && !uploadError && (
-                <p className="mt-2 text-xs font-semibold text-emerald-600">
-                  ✓ Salary slip uploaded successfully
+                <p className="mt-2 text-xs font-semibold text-emerald-600 inline-flex items-center gap-1.5">
+                  <CheckIcon className="w-4 h-4 text-emerald-500" />
+                  <span>Salary slip uploaded successfully</span>
                 </p>
               )}
               {uploadError && (

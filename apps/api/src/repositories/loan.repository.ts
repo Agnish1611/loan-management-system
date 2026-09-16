@@ -29,6 +29,12 @@ export class LoanRepository {
     return LoanModel.findById(id).exec();
   }
 
+  async findOpsLoanById(id: string): Promise<ILoanDocument | null> {
+    return LoanModel.findById(id)
+      .populate("borrowerUserId", "fullName email")
+      .exec();
+  }
+
   async findByReference(loanReference: string): Promise<ILoanDocument | null> {
     return LoanModel.findOne({ loanReference }).exec();
   }
@@ -52,6 +58,17 @@ export class LoanRepository {
 
   async findQueueByStatus(status: LoanStatus): Promise<ILoanDocument[]> {
     return LoanModel.find({ status })
+      .populate("borrowerUserId", "fullName email")
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async findAllLoans(status?: string): Promise<ILoanDocument[]> {
+    const query: Record<string, unknown> = {};
+    if (status && status !== "ALL") {
+      query.status = status;
+    }
+    return LoanModel.find(query)
       .populate("borrowerUserId", "fullName email")
       .sort({ createdAt: -1 })
       .exec();
