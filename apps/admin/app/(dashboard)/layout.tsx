@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Sidebar, PageSpinner, ApiError } from "@repo/ui";
+import { Sidebar, PageSpinner, ApiError, MenuIcon } from "@repo/ui";
 import type { SidebarLinkItem } from "@repo/ui";
 import { authApi } from "@/lib/api/auth";
 import type { SanitizedUser } from "@repo/types";
@@ -44,6 +44,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<SanitizedUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     authApi
@@ -101,11 +102,13 @@ export default function DashboardLayout({
   const links = buildLinks(user.role);
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar
         appName="CreditSea Ops"
         appSubtitle={user.role}
         links={links}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
         footer={
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1 pr-2">
@@ -125,8 +128,21 @@ export default function DashboardLayout({
           </div>
         }
       />
-      <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-6 py-8 sm:px-10 sm:py-10">
+
+      {/* Mobile top bar — hidden at lg+, where the sidebar is always visible */}
+      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200/90 bg-white px-4 py-3 lg:hidden">
+        <button
+          className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 cursor-pointer"
+          onClick={() => setMobileNavOpen(true)}
+          aria-label="Open menu"
+        >
+          <MenuIcon className="w-5 h-5" />
+        </button>
+        <span className="font-bold text-sm text-slate-900">CreditSea Ops</span>
+      </div>
+
+      <main className="lg:pl-64">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
           {children}
         </div>
       </main>

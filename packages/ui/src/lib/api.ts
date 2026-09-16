@@ -4,15 +4,27 @@
  * Authentication: Uses httpOnly cookies — the browser automatically sends
  * the auth cookie. No manual token injection needed.
  *
- * The API base URL defaults to http://localhost:8000/api/v1.
- * Call `configureApiClient({ baseUrl })` once at app startup to override.
+ * The base URL is read from NEXT_PUBLIC_API_URL directly at module load —
+ * Next.js inlines this at build time, so it's already known before any
+ * component ever mounts. It used to be set later via a configureApiClient()
+ * call inside a useEffect, but React fires effects bottom-up (children
+ * before parents): on a hard reload, a deep child's effect (e.g. a
+ * protected layout's own auth check) could run and fire a request before
+ * that ancestor effect ever got a chance to configure the real URL,
+ * silently sending the very first request to the localhost fallback.
+ * Reading it at module scope removes the ordering dependency entirely.
  *
- * Usage:
- *   configureApiClient({ baseUrl: process.env.NEXT_PUBLIC_API_URL });
- *   const data = await apiClient.get<LoanDto>('/loans/mine');
+ * configureApiClient() remains as an explicit override, e.g. for tests.
  */
 
-let _baseUrl = "http://localhost:8000/api/v1";
+// Narrow local ambient type — this package doesn't otherwise pull in
+// Node's global types, and this is the one spot that needs `process.env`.
+declare const process: { env: Record<string, string | undefined> } | undefined;
+
+let _baseUrl =
+  (typeof process !== "undefined"
+    ? process.env.NEXT_PUBLIC_API_URL
+    : undefined) ?? "http://localhost:8000/api/v1";
 
 export function configureApiClient(options: { baseUrl?: string }) {
   if (options.baseUrl) {

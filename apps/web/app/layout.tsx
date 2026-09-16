@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { ApiProvider } from "@/lib/ApiProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,9 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
-        <ApiProvider>{children}</ApiProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
