@@ -159,6 +159,46 @@ export function getApiBase(): string {
   return _baseUrl;
 }
 
+/**
+ * Fetch an authenticated file (e.g. a salary slip) and open it in a new
+ * tab as a blob URL.
+ *
+ * A plain `<a href={apiUrl} target="_blank">` doesn't work here: opening
+ * a link is a full top-level browser navigation, not a fetch from the
+ * page's own JS — and the cross-site auth cookie (SameSite=None,
+ * Partitioned in production) isn't reliably attached to that kind of
+ * direct navigation the way it is to an actual `fetch()` call. The
+ * backend's `requireAuth` also accepts a `?token=` query param as a
+ * fallback specifically for this case, but the frontend can't use it:
+ * the token lives in an httpOnly cookie precisely so JavaScript can
+ * never read it. So the only path that reliably carries auth here is a
+ * real `fetch()` with credentials, same as every other API call — then
+ * hand the browser the resulting bytes as a blob URL instead of asking
+ * it to navigate to a protected API URL directly.
+ */
+export async function openAuthenticatedFile(path: string): Promise<void> {
+  const url = `${_baseUrl}${path}`;
+  const res = await fetch(url, { credentials: "include" });
+
+  if (!res.ok) {
+    let json: unknown;
+    try {
+      json = await res.json();
+    } catch {
+      json = null;
+    }
+    const parsed = parseErrorMessage(res.status, json);
+    throw new ApiError(res.status, parsed.code, parsed.message, parsed.details, json);
+  }
+
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  window.open(objectUrl, "_blank");
+  // Revoke once the new tab has had time to load it, rather than
+  // leaking the object URL for the rest of the page's lifetime.
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
 export const apiClient = {
   get: <T>(path: string, options?: RequestInit): Promise<T> =>
     request<T>("GET", path, undefined, options),

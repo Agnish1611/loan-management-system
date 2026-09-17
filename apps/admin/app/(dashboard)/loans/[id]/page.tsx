@@ -22,7 +22,7 @@ import {
   formatDate,
   formatDateTime,
   ApiError,
-  getApiBase,
+  openAuthenticatedFile,
   cn,
   ArrowLeftIcon,
   CheckIcon,
@@ -86,6 +86,7 @@ export default function LoanDetailPage({
   const [loading, setLoading] = useState(true);
   const [copiedPan, setCopiedPan] = useState(false);
   const [copiedRef, setCopiedRef] = useState(false);
+  const [documentError, setDocumentError] = useState<string | null>(null);
 
   // Sanction action state
   const [sanctionNotes, setSanctionNotes] = useState("");
@@ -147,6 +148,15 @@ export default function LoanDetailPage({
     } else {
       setCopiedRef(true);
       setTimeout(() => setCopiedRef(false), 2000);
+    }
+  }
+
+  async function handleViewSalarySlip(documentId: string) {
+    setDocumentError(null);
+    try {
+      await openAuthenticatedFile(`/documents/${documentId}/content`);
+    } catch {
+      setDocumentError("Couldn't open the salary slip. Please try again.");
     }
   }
 
@@ -467,16 +477,18 @@ export default function LoanDetailPage({
                   Salary Slip
                 </h2>
               </div>
-              <a
-                href={`${getApiBase()}/documents/${loan.salarySlipDocumentId}/content`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+              <button
+                type="button"
+                onClick={() => handleViewSalarySlip(loan.salarySlipDocumentId)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer"
               >
                 <span>Open document</span>
                 <ExternalLinkIcon className="w-3.5 h-3.5" />
-              </a>
+              </button>
             </div>
+            {documentError && (
+              <p className="mt-2 text-xs text-rose-600">{documentError}</p>
+            )}
           </div>
 
           {/* Underwriting BRE Policy Audit Scorecard */}

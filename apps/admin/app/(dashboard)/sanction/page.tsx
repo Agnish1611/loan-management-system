@@ -19,7 +19,7 @@ import {
   formatRupee,
   formatDate,
   ApiError,
-  getApiBase,
+  openAuthenticatedFile,
   cn,
   CheckIcon,
   XMarkIcon,
@@ -67,6 +67,7 @@ export default function SanctionPage() {
 
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [documentError, setDocumentError] = useState<string | null>(null);
 
   useEffect(() => {
     sanctionApi
@@ -84,12 +85,23 @@ export default function SanctionPage() {
     setCheckSlip(true);
     setCheckBre(true);
     setError(null);
+    setDocumentError(null);
   }
 
   function closeActionModal() {
     setSelected(null);
     setAction(null);
     setError(null);
+    setDocumentError(null);
+  }
+
+  async function handleViewSalarySlip(documentId: string) {
+    setDocumentError(null);
+    try {
+      await openAuthenticatedFile(`/documents/${documentId}/content`);
+    } catch {
+      setDocumentError("Couldn't open the salary slip. Please try again.");
+    }
   }
 
   function applyPreset(preset: (typeof REJECTION_PRESETS)[number]) {
@@ -311,18 +323,23 @@ export default function SanctionPage() {
               {selected.salarySlipDocumentId && (
                 <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
                   <span className="text-slate-500">Income Document:</span>
-                  <a
-                    href={`${getApiBase()}/documents/${selected.salarySlipDocumentId}/content`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleViewSalarySlip(selected.salarySlipDocumentId)
+                    }
+                    className="cursor-pointer"
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <DocumentTextIcon className="w-4 h-4 text-indigo-500" />
                       View Uploaded Salary Slip
                       <ExternalLinkIcon className="w-3.5 h-3.5 text-indigo-400" />
                     </span>
-                  </a>
+                  </button>
                 </div>
+              )}
+              {documentError && (
+                <p className="text-xs text-rose-600">{documentError}</p>
               )}
             </div>
 

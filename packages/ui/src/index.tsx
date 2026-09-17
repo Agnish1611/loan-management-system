@@ -66,6 +66,7 @@ export {
   buildQuery,
   configureApiClient,
   getApiBase,
+  openAuthenticatedFile,
 } from "./lib/api";
 export { setSessionHint, clearSessionHint } from "./lib/session-hint";
 export { cn } from "./lib/utils";

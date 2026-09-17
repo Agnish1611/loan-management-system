@@ -20,10 +20,10 @@ import {
   ExternalLinkIcon,
   CheckIcon,
   cn,
+  openAuthenticatedFile,
 } from "@repo/ui";
 import { loansApi } from "@/lib/api/loans";
 import type { LoanDto, PaymentDto, LoanStatus } from "@repo/types";
-import { documentsApi } from "@/lib/api/documents";
 
 const STAGES: { status: LoanStatus; label: string }[] = [
   { status: "APPLIED", label: "Applied" },
@@ -104,6 +104,7 @@ export default function LoanDetailPage() {
   const [loan, setLoan] = useState<LoanDto | null>(null);
   const [payments, setPayments] = useState<PaymentDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [documentError, setDocumentError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([loansApi.getById(id), loansApi.getPayments(id)])
@@ -113,6 +114,15 @@ export default function LoanDetailPage() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  async function handleViewSalarySlip(documentId: string) {
+    setDocumentError(null);
+    try {
+      await openAuthenticatedFile(`/documents/${documentId}/content`);
+    } catch {
+      setDocumentError("Couldn't open the salary slip. Please try again.");
+    }
+  }
 
   if (loading) return <DetailPageSkeleton />;
   if (!loan) {
@@ -227,16 +237,18 @@ export default function LoanDetailPage() {
 
           {/* Salary slip link */}
           <div className="pt-4 border-t border-slate-100">
-            <a
-              href={documentsApi.getContentUrl(loan.salarySlipDocumentId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+            <button
+              type="button"
+              onClick={() => handleViewSalarySlip(loan.salarySlipDocumentId)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
             >
               <DocumentTextIcon className="w-4 h-4 text-indigo-500" />
               <span>View Attached Salary Slip</span>
               <ExternalLinkIcon className="w-3.5 h-3.5 text-indigo-400" />
-            </a>
+            </button>
+            {documentError && (
+              <p className="mt-1.5 text-xs text-rose-600">{documentError}</p>
+            )}
           </div>
         </div>
 
