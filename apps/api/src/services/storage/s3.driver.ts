@@ -1,3 +1,4 @@
+import type { Readable } from "stream";
 import {
   S3Client,
   PutObjectCommand,
@@ -5,7 +6,6 @@ import {
   HeadObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/config/index.js";
 import { NotFoundError } from "@/errors/index.js";
 import type {
@@ -88,17 +88,25 @@ export class S3StorageDriver implements StorageDriver {
       throw err;
     }
 
+    // Fetched and streamed server-side rather than handed back as a
+    // presigned redirect URL. A redirect worked fine for a plain <a
+    // target="_blank"> link, but the browser needs the request to carry
+    // the httpOnly auth cookie, which means it has to be a real
+    // credentialed fetch() — and a credentials:"include" fetch that gets
+    // redirected across origins (our API -> S3) is unreliable in
+    // practice: Chrome fails it even when every hop's CORS headers are
+    // individually correct (confirmed directly — curl -L follows the
+    // exact same redirect chain successfully end to end). Streaming the
+    // bytes through our own origin sidesteps the cross-origin redirect
+    // entirely, so there's nothing left for the browser to reject.
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: doc.storageKey,
-      ResponseContentType: doc.mimeType,
-      ResponseContentDisposition: "inline",
     });
-
-    const url = await getSignedUrl(this.client, command, { expiresIn: 300 }); // 5 minutes
+    const response = await this.client.send(command);
     return {
-      kind: "redirect",
-      url,
+      kind: "stream",
+      stream: response.Body as Readable,
     };
   }
 

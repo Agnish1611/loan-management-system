@@ -188,7 +188,13 @@ export async function openAuthenticatedFile(path: string): Promise<void> {
       json = null;
     }
     const parsed = parseErrorMessage(res.status, json);
-    throw new ApiError(res.status, parsed.code, parsed.message, parsed.details, json);
+    throw new ApiError(
+      res.status,
+      parsed.code,
+      parsed.message,
+      parsed.details,
+      json,
+    );
   }
 
   const blob = await res.blob();
