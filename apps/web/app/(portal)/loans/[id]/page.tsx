@@ -12,7 +12,7 @@ import {
   Tr,
   Th,
   Td,
-  PageSpinner,
+  DetailPageSkeleton,
   formatRupee,
   formatDate,
   formatDateTime,
@@ -114,7 +114,7 @@ export default function LoanDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <PageSpinner />;
+  if (loading) return <DetailPageSkeleton />;
   if (!loan) {
     return (
       <div className="p-8 text-center text-slate-500">

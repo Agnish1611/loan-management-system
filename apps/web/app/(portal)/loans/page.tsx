@@ -13,7 +13,7 @@ import {
   Td,
   StatusBadge,
   EmptyState,
-  PageSpinner,
+  TableSkeleton,
   Button,
   formatRupee,
   formatDate,
@@ -47,7 +47,7 @@ export default function LoansPage() {
       />
 
       {loading ? (
-        <PageSpinner />
+        <TableSkeleton rows={6} />
       ) : loans.length === 0 ? (
         <EmptyState
           title="No applications yet"

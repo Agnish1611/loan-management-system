@@ -7,7 +7,7 @@ import {
   Label,
   Input,
   Select,
-  PageSpinner,
+  FormPageSkeleton,
   Badge,
   formatDate,
   ApiError,
@@ -128,7 +128,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <PageSpinner />;
+  if (loading) return <FormPageSkeleton />;
 
   return (
     <div className="max-w-4xl space-y-8">

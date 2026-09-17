@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar, PageSpinner, ApiError, MenuIcon } from "@repo/ui";
+import { Sidebar, AppShellSkeleton, ApiError, MenuIcon } from "@repo/ui";
 import type { SidebarLinkItem } from "@repo/ui";
 import { authApi } from "@/lib/api/auth";
 
@@ -39,7 +39,7 @@ export default function PortalLayout({
       });
   }, [router]);
 
-  if (loading) return <PageSpinner />;
+  if (loading) return <AppShellSkeleton />;
 
   async function handleLogout() {
     try {

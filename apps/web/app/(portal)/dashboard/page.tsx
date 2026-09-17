@@ -6,7 +6,8 @@ import {
   PageHeader,
   StatusBadge,
   EmptyState,
-  PageSpinner,
+  CardSkeleton,
+  StatGridSkeleton,
   Button,
   formatRupee,
   formatDate,
@@ -48,7 +49,10 @@ export default function DashboardPage() {
       />
 
       {loading ? (
-        <PageSpinner />
+        <div className="space-y-8">
+          <CardSkeleton lines={4} />
+          <StatGridSkeleton count={3} />
+        </div>
       ) : loans.length === 0 ? (
         <EmptyState
           title="No loans yet"

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   PageHeader,
-  PageSpinner,
+  DetailPageSkeleton,
   Button,
   Input,
   Label,
@@ -249,7 +249,7 @@ export default function LoanDetailPage({
     }
   }
 
-  if (loading) return <PageSpinner />;
+  if (loading) return <DetailPageSkeleton />;
   if (!loan) {
     return (
       <div className="py-12 text-center">

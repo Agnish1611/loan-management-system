@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Sidebar, PageSpinner, ApiError, MenuIcon } from "@repo/ui";
+import { Sidebar, AppShellSkeleton, ApiError, MenuIcon } from "@repo/ui";
 import type { SidebarLinkItem } from "@repo/ui";
 import { authApi } from "@/lib/api/auth";
 import type { SanitizedUser } from "@repo/types";
@@ -81,14 +81,14 @@ export default function DashboardLayout({
     }
   }, [user, pathname, router]);
 
-  if (loading) return <PageSpinner />;
+  if (loading) return <AppShellSkeleton />;
   if (!user) return null;
 
   const allowedPaths = allowedPathsForRole(user.role);
   const isCurrentPathAllowed = allowedPaths.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
-  if (!isCurrentPathAllowed) return <PageSpinner />;
+  if (!isCurrentPathAllowed) return <AppShellSkeleton />;
 
   async function handleLogout() {
     try {

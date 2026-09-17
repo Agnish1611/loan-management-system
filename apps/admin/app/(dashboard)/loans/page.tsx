@@ -11,7 +11,7 @@ import {
   Th,
   Td,
   EmptyState,
-  PageSpinner,
+  TableSkeleton,
   Input,
   StatusBadge,
   ArrowRightIcon,
@@ -114,7 +114,7 @@ export default function GlobalLoansLedgerPage() {
 
       {/* Main Ledger Table */}
       {loading ? (
-        <PageSpinner />
+        <TableSkeleton rows={6} />
       ) : loans.length === 0 ? (
         <EmptyState
           title="No loans found"

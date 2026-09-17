@@ -11,7 +11,7 @@ import {
   Th,
   Td,
   EmptyState,
-  PageSpinner,
+  TableSkeleton,
   Modal,
   Button,
   Label,
@@ -131,7 +131,7 @@ export default function SanctionPage() {
       />
 
       {loading ? (
-        <PageSpinner />
+        <TableSkeleton rows={6} />
       ) : loans.length === 0 ? (
         <EmptyState
           title="Queue clear"

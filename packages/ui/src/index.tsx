@@ -17,8 +17,18 @@ export type { TextareaProps } from "./components/Textarea";
 export { Badge, StatusBadge } from "./components/Badge";
 export type { BadgeProps } from "./components/Badge";
 
-export { Spinner, PageSpinner } from "./components/Spinner";
-export type { SpinnerProps } from "./components/Spinner";
+export {
+  Skeleton,
+  PageHeaderSkeleton,
+  StatGridSkeleton,
+  TableSkeleton,
+  CardSkeleton,
+  ListPageSkeleton,
+  DashboardSkeleton,
+  DetailPageSkeleton,
+  FormPageSkeleton,
+  AppShellSkeleton,
+} from "./components/Skeleton";
 
 export { EmptyState } from "./components/EmptyState";
 export type { EmptyStateProps } from "./components/EmptyState";

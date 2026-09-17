@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   PageHeader,
-  PageSpinner,
+  DashboardSkeleton,
   Button,
   StatusBadge,
   formatRupee,
@@ -100,7 +100,7 @@ export default function DashboardOverviewPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <PageSpinner />;
+  if (loading) return <DashboardSkeleton statCount={3} />;
 
   const moduleCards = [
     leadsCount !== null && {

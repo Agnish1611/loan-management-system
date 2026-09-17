@@ -11,7 +11,7 @@ import {
   Th,
   Td,
   EmptyState,
-  PageSpinner,
+  TableSkeleton,
   Modal,
   Button,
   Label,
@@ -117,7 +117,7 @@ export default function CollectionPage() {
       />
 
       {loading ? (
-        <PageSpinner />
+        <TableSkeleton rows={6} />
       ) : loans.length === 0 ? (
         <EmptyState
           title="No active loans"

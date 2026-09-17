@@ -11,7 +11,7 @@ import {
   Th,
   Td,
   EmptyState,
-  PageSpinner,
+  TableSkeleton,
   StatusBadge,
   Input,
   Badge,
@@ -86,7 +86,7 @@ export default function SalesLeadsPage() {
       </div>
 
       {loading ? (
-        <PageSpinner />
+        <TableSkeleton rows={6} />
       ) : leads.length === 0 ? (
         <EmptyState
           title="No leads found"

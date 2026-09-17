@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import {
-  PageSpinner,
+  DetailPageSkeleton,
   Button,
   StatusBadge,
   Badge,
@@ -56,7 +56,7 @@ export default function SalesLeadDetailPage({
     }
   }
 
-  if (loading) return <PageSpinner />;
+  if (loading) return <DetailPageSkeleton />;
   if (!lead) {
     return (
       <div className="py-12 text-center">

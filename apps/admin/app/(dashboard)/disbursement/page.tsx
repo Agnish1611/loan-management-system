@@ -11,7 +11,7 @@ import {
   Th,
   Td,
   EmptyState,
-  PageSpinner,
+  TableSkeleton,
   Modal,
   Button,
   Label,
@@ -88,7 +88,7 @@ export default function DisbursementPage() {
       />
 
       {loading ? (
-        <PageSpinner />
+        <TableSkeleton rows={6} />
       ) : loans.length === 0 ? (
         <EmptyState
           title="Disbursement queue clear"

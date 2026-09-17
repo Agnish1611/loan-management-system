@@ -7,7 +7,7 @@ import {
   Button,
   Label,
   Input,
-  PageSpinner,
+  FormPageSkeleton,
   formatRupee,
   ApiError,
   useDebounce,
@@ -135,7 +135,7 @@ export default function ApplyPage() {
     }
   }
 
-  if (breState === "loading") return <PageSpinner />;
+  if (breState === "loading") return <FormPageSkeleton />;
 
   return (
     <div>
